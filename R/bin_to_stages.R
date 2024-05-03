@@ -25,7 +25,7 @@ dat_species %>%
   # bin occurrences to stages
   mutate(bin_max = 95 - cut(max_ma, breaks = stages$bottom,
                             include.lowest = TRUE,
-                            labels = FALSE),
+                            labels = FALSE), 
          bin_min = 96 - cut(min_ma, breaks = stages$top,
                             include.lowest = TRUE,
                             labels = FALSE)) %>% 
