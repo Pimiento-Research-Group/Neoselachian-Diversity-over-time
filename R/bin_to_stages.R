@@ -30,9 +30,12 @@ dat_species %>%
                             include.lowest = TRUE,
                             labels = FALSE)) %>% 
   drop_na(bin_max, bin_min) %>% 
+  mutate(reference_no = as.numeric(as.factor(reference))) %>% 
   filter(bin_max == bin_min) %>% 
-  select(accepted_name, rank, genus, family, order, superorder, 
-         stg = bin_min) %>% 
+  select(accepted_name, rank, genus, 
+         family, order, superorder, 
+         stg = bin_min, collection_no, 
+         reference_no) %>% 
   write_rds(here("data", 
                  "species_binned_stages.rds"))
 
@@ -47,9 +50,12 @@ dat_genus %>%
                             include.lowest = TRUE,
                             labels = FALSE)) %>% 
   drop_na(bin_max, bin_min) %>% 
+  mutate(reference_no = as.numeric(as.factor(reference))) %>% 
   filter(bin_max == bin_min) %>% 
-  select(accepted_name, rank, genus, family, order, superorder, 
-         stg = bin_min) %>% 
+  select(accepted_name, rank, genus, 
+         family, order, superorder, 
+         stg = bin_min, collection_no, 
+         reference_no) %>% 
   write_rds(here("data", 
                  "genus_binned_stages.rds"))
 
