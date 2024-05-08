@@ -1,6 +1,7 @@
 library(tidyverse)
 library(here)
 library(patchwork)
+library(deeptime)
 
 # read data ---------------------------------------------------------------
 
@@ -16,7 +17,7 @@ data(stages, package = "divDyn")
 epoch_age <- stages %>% 
   as_tibble() %>% 
   group_by(series) %>% 
-  summarise(epoch = max(top)) %>% 
+  summarise(epoch = min(top)) %>% 
   arrange(epoch) %>% 
   filter(epoch <= 140) %>% 
   pull(epoch) %>% 
@@ -33,7 +34,7 @@ plot_spec <- dat_raw %>%
              colour = "grey70") +
   geom_line() +
   labs(y = "Species diversity", 
-       x = "Age [Myr]", 
+       x = NULL, 
        colour = NULL) +
   scale_color_manual(values = c("#ad6d8aff", 
                                 "#ffbc3cff",
@@ -42,6 +43,18 @@ plot_spec <- dat_raw %>%
                                 "Range-Through", 
                                 "Sampled-in-Bin")) +
   scale_x_reverse(breaks = seq(140, 0, -20)) +
+  coord_geo(xlim = c(0, 140), 
+            dat = list("periods"),
+            pos = list("b"),
+            alpha = 0.2, 
+            height = unit(0.8, "line"), 
+            size = list(10/.pt),
+            lab_color = "grey20", 
+            color = "grey20", 
+            abbrv = list(TRUE), 
+            fill = "white",
+            expand = TRUE, 
+            lwd = list(0.4)) +
   theme_minimal() +
   theme(legend.position = c(0.2, 0.8), 
         panel.grid.major = element_blank(), 
@@ -60,12 +73,24 @@ plot_spec_sqs <- dat_sqs %>%
              colour = "grey70") +
   geom_line(alpha = 0.1) +
   labs(y = "Species Diversity  [SQS]", 
-       x = "Age [Myr]", 
+       x = NULL, 
        colour = NULL) +
   scale_color_manual(values = c("#ad6d8aff", 
                                 "#ffbc3cff",
                                 "coral3")) +
   scale_x_reverse(breaks = seq(140, 0, -20)) +
+  coord_geo(xlim = c(0, 140), 
+            dat = list("periods"),
+            pos = list("b"),
+            alpha = 0.2, 
+            height = unit(0.8, "line"), 
+            size = list(10/.pt),
+            lab_color = "grey20", 
+            color = "grey20", 
+            abbrv = list(TRUE), 
+            fill = "white",
+            expand = TRUE, 
+            lwd = list(0.4)) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid.major = element_blank(), 
@@ -81,7 +106,7 @@ plot_gen <- dat_raw %>%
              colour = "grey70") +
   geom_line() +
   labs(y = "Genus diversity", 
-       x = "Age [Myr]", 
+       x = NULL, 
        colour = NULL) +
   scale_color_manual(values = c("#ad6d8aff", 
                                 "#ffbc3cff",
@@ -89,7 +114,19 @@ plot_gen <- dat_raw %>%
                      labels = c("Boundary-Crosser", 
                                 "Range-Through", 
                                 "Sampled-in-Bin")) +
-  scale_x_reverse(breaks = seq(140, 0, -20)) +
+  scale_x_reverse(breaks = seq(140, 0, -20))  +
+  coord_geo(xlim = c(0, 140), 
+            dat = list("periods"),
+            pos = list("b"),
+            alpha = 0.2, 
+            height = unit(0.8, "line"), 
+            size = list(10/.pt),
+            lab_color = "grey20", 
+            color = "grey20", 
+            abbrv = list(TRUE), 
+            fill = "white",
+            expand = TRUE, 
+            lwd = list(0.4)) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid.major = element_blank(), 
@@ -108,7 +145,7 @@ plot_gen_sqs <- dat_sqs %>%
              colour = "grey70") +
   geom_line(alpha = 0.1) +
   labs(y = "Genus Diversity  [SQS]", 
-       x = "Age [Myr]", 
+       x = NULL, 
        colour = NULL) +
   scale_color_manual(values = c("#ad6d8aff", 
                                 "#ffbc3cff",
@@ -116,7 +153,19 @@ plot_gen_sqs <- dat_sqs %>%
                      labels = c("Boundary-Crosser", 
                                 "Range-Through", 
                                 "Sampled-in-Bin")) +
-  scale_x_reverse(breaks = seq(140, 0, -20)) +
+  scale_x_reverse(breaks = seq(140, 0, -20))  +
+  coord_geo(xlim = c(0, 140), 
+            dat = list("periods"),
+            pos = list("b"),
+            alpha = 0.2, 
+            height = unit(0.8, "line"), 
+            size = list(10/.pt),
+            lab_color = "grey20", 
+            color = "grey20", 
+            abbrv = list(TRUE), 
+            fill = "white",
+            expand = TRUE, 
+            lwd = list(0.4)) +
   theme_minimal() +
   theme(legend.position = "none", 
         panel.grid.major = element_blank(), 
