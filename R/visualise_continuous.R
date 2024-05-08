@@ -10,6 +10,18 @@ dat_raw <- read_csv(here("data",
 dat_sqs <- read_csv(here("data",
                          "diversity_continuous_sqs.csv"))
 
+data(stages, package = "divDyn")
+
+# get epoch age into epochs
+epoch_age <- stages %>% 
+  as_tibble() %>% 
+  group_by(series) %>% 
+  summarise(epoch = max(top)) %>% 
+  arrange(epoch) %>% 
+  filter(epoch <= 140) %>% 
+  pull(epoch) %>% 
+  {.[-c(1, 2)]}
+
 # visualise ---------------------------------------------------------------
 
 
@@ -17,6 +29,8 @@ plot_spec <- dat_raw %>%
   filter(str_detect(metric, "species")) %>% 
   ggplot(aes(mid_age, diversity, 
              colour = metric)) +
+  geom_vline(xintercept = epoch_age, 
+             colour = "grey70") +
   geom_line() +
   labs(y = "Species diversity", 
        x = "Age [Myr]", 
@@ -42,6 +56,8 @@ plot_spec_sqs <- dat_sqs %>%
   ggplot(aes(mid_age, diversity, 
              colour = metric, 
              group = run)) +
+  geom_vline(xintercept = epoch_age, 
+             colour = "grey70") +
   geom_line(alpha = 0.1) +
   labs(y = "Species Diversity  [SQS]", 
        x = "Age [Myr]", 
@@ -61,6 +77,8 @@ plot_gen <- dat_raw %>%
   filter(str_detect(metric, "genus")) %>% 
   ggplot(aes(mid_age, diversity, 
              colour = metric)) +
+  geom_vline(xintercept = epoch_age, 
+             colour = "grey70") +
   geom_line() +
   labs(y = "Genus diversity", 
        x = "Age [Myr]", 
@@ -86,6 +104,8 @@ plot_gen_sqs <- dat_sqs %>%
   ggplot(aes(mid_age, diversity, 
              colour = metric, 
              group = run)) +
+  geom_vline(xintercept = epoch_age, 
+             colour = "grey70") +
   geom_line(alpha = 0.1) +
   labs(y = "Genus Diversity  [SQS]", 
        x = "Age [Myr]", 
