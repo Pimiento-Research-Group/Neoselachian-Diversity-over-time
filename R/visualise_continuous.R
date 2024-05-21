@@ -8,8 +8,8 @@ library(deeptime)
 dat_raw <- read_csv(here("data",
                           "diversity_continuous_raw.csv"))
 
-dat_sqs <- read_csv(here("data",
-                         "diversity_continuous_sqs.csv"))
+# dat_sqs <- read_csv(here("data",
+#                          "diversity_continuous_sqs.csv"))
 
 data(stages, package = "divDyn")
 
@@ -27,13 +27,16 @@ epoch_age <- stages %>%
 
 
 plot_spec <- dat_raw %>%
-  filter(str_detect(metric, "species"), 
-         str_detect(metric, "BC")) %>% 
-  ggplot(aes(mid_age, diversity, 
-             colour = metric)) +
+  ggplot(aes(start_age, speciesRT)) +
   geom_vline(xintercept = epoch_age, 
              colour = "grey70") +
-  geom_line() +
+  geom_step(aes(group = run), 
+            alpha = 0.07, 
+            colour = "#ffbc3cff") +
+  geom_step(data = dat_raw %>% 
+              group_by(start_age) %>% 
+              summarise(speciesRT = mean(speciesRT)), 
+            colour = "#ffbc3cff") +
   labs(y = "Species diversity", 
        x = NULL, 
        colour = NULL) +
@@ -61,52 +64,55 @@ plot_spec <- dat_raw %>%
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank())
 
-plot_spec_sqs <- dat_sqs %>%
-  filter( str_detect(metric, "species")) %>% 
-  mutate(metric = case_when(
-    metric == "speciesRT" ~ "Range-Through", 
-    metric == "speciesBC" ~ "Boundary-Crosser",
-    metric == "speciesSIB" ~ "Sampled-in-Bin")) %>% 
-  ggplot(aes(mid_age, diversity, 
-             colour = metric, 
-             group = run)) +
-  geom_vline(xintercept = epoch_age, 
-             colour = "grey70") +
-  geom_line(alpha = 0.1) +
-  labs(y = "Species Diversity  [SQS]", 
-       x = NULL, 
-       colour = NULL) +
-  scale_color_manual(values = c("#ad6d8aff", 
-                                "#ffbc3cff",
-                                "coral3")) +
-  scale_x_reverse(breaks = seq(140, 0, -20)) +
-  coord_geo(xlim = c(0, 140), 
-            dat = list("periods"),
-            pos = list("b"),
-            alpha = 0.2, 
-            height = unit(0.8, "line"), 
-            size = list(10/.pt),
-            lab_color = "grey20", 
-            color = "grey20", 
-            abbrv = list(TRUE), 
-            fill = "white",
-            expand = TRUE, 
-            lwd = list(0.4)) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank()) +
-  facet_wrap(~metric) 
+# plot_spec_sqs <- dat_sqs %>%
+#   filter( str_detect(metric, "species")) %>% 
+#   mutate(metric = case_when(
+#     metric == "speciesRT" ~ "Range-Through", 
+#     metric == "speciesBC" ~ "Boundary-Crosser",
+#     metric == "speciesSIB" ~ "Sampled-in-Bin")) %>% 
+#   ggplot(aes(mid_age, diversity, 
+#              colour = metric, 
+#              group = run)) +
+#   geom_vline(xintercept = epoch_age, 
+#              colour = "grey70") +
+#   geom_line(alpha = 0.1) +
+#   labs(y = "Species Diversity  [SQS]", 
+#        x = NULL, 
+#        colour = NULL) +
+#   scale_color_manual(values = c("#ad6d8aff", 
+#                                 "#ffbc3cff",
+#                                 "coral3")) +
+#   scale_x_reverse(breaks = seq(140, 0, -20)) +
+#   coord_geo(xlim = c(0, 140), 
+#             dat = list("periods"),
+#             pos = list("b"),
+#             alpha = 0.2, 
+#             height = unit(0.8, "line"), 
+#             size = list(10/.pt),
+#             lab_color = "grey20", 
+#             color = "grey20", 
+#             abbrv = list(TRUE), 
+#             fill = "white",
+#             expand = TRUE, 
+#             lwd = list(0.4)) +
+#   theme_minimal() +
+#   theme(legend.position = "none", 
+#         panel.grid.major = element_blank(), 
+#         panel.grid.minor = element_blank()) +
+#   facet_wrap(~metric) 
 
 # same for genus
 plot_gen <- dat_raw %>%
-  filter(str_detect(metric, "species"), 
-         str_detect(metric, "BC")) %>% 
-  ggplot(aes(mid_age, diversity, 
-             colour = metric)) +
+  ggplot(aes(start_age, genusRT)) +
   geom_vline(xintercept = epoch_age, 
              colour = "grey70") +
-  geom_line() +
+  geom_step(aes(group = run), 
+            alpha = 0.07, 
+            colour = "#ffbc3cff") +
+  geom_step(data = dat_raw %>% 
+              group_by(start_age) %>% 
+              summarise(genusRT = mean(genusRT)), 
+            colour = "#ffbc3cff") +
   labs(y = "Genus diversity", 
        x = NULL, 
        colour = NULL) +
@@ -134,45 +140,45 @@ plot_gen <- dat_raw %>%
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank())
 
-plot_gen_sqs <- dat_sqs %>%
-  filter(str_detect(metric, "genus")) %>% 
-  mutate(metric = case_when(
-    metric == "genusRT" ~ "Range-Through", 
-    metric == "genusBC" ~ "Boundary-Crosser",
-    metric == "genusSIB" ~ "Sampled-in-Bin")) %>% 
-  ggplot(aes(mid_age, diversity, 
-             colour = metric, 
-             group = run)) +
-  geom_vline(xintercept = epoch_age, 
-             colour = "grey70") +
-  geom_line(alpha = 0.1) +
-  labs(y = "Genus Diversity  [SQS]", 
-       x = NULL, 
-       colour = NULL) +
-  scale_color_manual(values = c("#ad6d8aff", 
-                                "#ffbc3cff",
-                                "coral3"), 
-                     labels = c("Boundary-Crosser", 
-                                "Range-Through", 
-                                "Sampled-in-Bin")) +
-  scale_x_reverse(breaks = seq(140, 0, -20))  +
-  coord_geo(xlim = c(0, 140), 
-            dat = list("periods"),
-            pos = list("b"),
-            alpha = 0.2, 
-            height = unit(0.8, "line"), 
-            size = list(10/.pt),
-            lab_color = "grey20", 
-            color = "grey20", 
-            abbrv = list(TRUE), 
-            fill = "white",
-            expand = TRUE, 
-            lwd = list(0.4)) +
-  theme_minimal() +
-  theme(legend.position = "none", 
-        panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank()) +
-  facet_wrap(~metric)
+# plot_gen_sqs <- dat_sqs %>%
+#   filter(str_detect(metric, "genus")) %>% 
+#   mutate(metric = case_when(
+#     metric == "genusRT" ~ "Range-Through", 
+#     metric == "genusBC" ~ "Boundary-Crosser",
+#     metric == "genusSIB" ~ "Sampled-in-Bin")) %>% 
+#   ggplot(aes(mid_age, diversity, 
+#              colour = metric, 
+#              group = run)) +
+#   geom_vline(xintercept = epoch_age, 
+#              colour = "grey70") +
+#   geom_line(alpha = 0.1) +
+#   labs(y = "Genus Diversity  [SQS]", 
+#        x = NULL, 
+#        colour = NULL) +
+#   scale_color_manual(values = c("#ad6d8aff", 
+#                                 "#ffbc3cff",
+#                                 "coral3"), 
+#                      labels = c("Boundary-Crosser", 
+#                                 "Range-Through", 
+#                                 "Sampled-in-Bin")) +
+#   scale_x_reverse(breaks = seq(140, 0, -20))  +
+#   coord_geo(xlim = c(0, 140), 
+#             dat = list("periods"),
+#             pos = list("b"),
+#             alpha = 0.2, 
+#             height = unit(0.8, "line"), 
+#             size = list(10/.pt),
+#             lab_color = "grey20", 
+#             color = "grey20", 
+#             abbrv = list(TRUE), 
+#             fill = "white",
+#             expand = TRUE, 
+#             lwd = list(0.4)) +
+#   theme_minimal() +
+#   theme(legend.position = "none", 
+#         panel.grid.major = element_blank(), 
+#         panel.grid.minor = element_blank()) +
+#   facet_wrap(~metric)
 
 # patch together ----------------------------------------------------------
 
