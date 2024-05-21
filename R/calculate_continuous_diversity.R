@@ -12,8 +12,11 @@ dat_species <- read_rds(here("data",
 dat_genus <- read_rds(here("data", 
                            "fins_filtered_genus.rds"))
 
-# attach the time scale object
-data(stages)
+# define the bins
+bins <- sort(c(0, 0.0042, 0.0082, 0.0117, 0.126, 0.781, 1.80, 2.58, 3.6, 5.333, 7.246, 11.63, 13.82,
+               15.97, 20.44, 23.03, 28.1, 33.9, 37.8, 41.2, 47.8, 56.0, 59.2,
+               61.6, 66.0, 72.1, 83.6, 86.3, 89.8, 93.9, 100.5, 113., 125., 129.4,
+               132.9, 139.8, 155), decreasing=TRUE)
 
 
 
@@ -40,17 +43,16 @@ get_div <- function(data_set, tax_level, div_metric) {
       list_div[[i]] <- dat_age %>% 
         mutate(age_sel = map_dbl(age_mid, 
                                  ~pluck(.x, i))) %>% 
-        mutate(stg = 95 - cut(max_ma, 
-                              breaks = stages$bottom, 
-                              include.lowest = TRUE, 
-                              labels = FALSE)) %>% 
+        mutate(stg = cut(age_sel, 
+                         breaks = bins, 
+                         include.lowest = TRUE)) %>% 
         divDyn(., bin = "stg", tax = "accepted_name") %>% 
         as_tibble() %>% 
-        add_column(mid_age = stages$mid[1:94]) %>% 
-        filter(between(stg, 70, 94)) %>% 
-        select(stg, mid_age,
+        add_column(start_age = bins[-37]) %>% 
+        filter(between(start_age, 0, 150)) %>% 
+        select(stg, start_age,
                divRT, divBC, divSIB) %>% 
-        rename_with(~str_replace(., "div", tax_level), contains("div")) %>% 
+        rename_with(~str_replace(., "div", tax_level), contains("div")) %>%
         add_column(run = i)
     }
     
@@ -104,12 +106,7 @@ dat_div_gen_sqs <- get_div(dat_genus, "genus", "sqs")
 # simplify those cases where there is no variation across
 # age estimates
 dat_div_spec %>% 
-  distinct(pick(-contains("run"))) %>% 
-  full_join(dat_div_gen %>% 
-              distinct(pick(-contains("run")))) %>% 
-  pivot_longer(cols = -c(stg, mid_age), 
-               names_to = "metric", 
-               values_to = "diversity") %>% 
+  full_join(dat_div_gen) %>% 
   write_csv(here("data",
                  "diversity_continuous_raw.csv"))
 

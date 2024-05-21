@@ -27,7 +27,8 @@ epoch_age <- stages %>%
 
 
 plot_spec <- dat_raw %>%
-  filter(str_detect(metric, "species")) %>% 
+  filter(str_detect(metric, "species"), 
+         str_detect(metric, "BC")) %>% 
   ggplot(aes(mid_age, diversity, 
              colour = metric)) +
   geom_vline(xintercept = epoch_age, 
@@ -99,7 +100,8 @@ plot_spec_sqs <- dat_sqs %>%
 
 # same for genus
 plot_gen <- dat_raw %>%
-  filter(str_detect(metric, "genus")) %>% 
+  filter(str_detect(metric, "species"), 
+         str_detect(metric, "BC")) %>% 
   ggplot(aes(mid_age, diversity, 
              colour = metric)) +
   geom_vline(xintercept = epoch_age, 
