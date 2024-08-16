@@ -18,7 +18,7 @@ bins <- sort(c(0, 0.0042, 0.0082, 0.0117, 0.126, 0.781, 1.80, 2.58, 3.6, 5.333, 
                61.6, 66.0, 72.1, 83.6, 86.3, 89.8, 93.9, 100.5, 113., 125., 129.4,
                132.9, 139.8, 155), decreasing=TRUE)
 
-
+data(stages, package = "divDyn")
 
 # set up function to calculate continuous diversity ------------------------
 
@@ -45,10 +45,11 @@ get_div <- function(data_set, tax_level, div_metric) {
                                  ~pluck(.x, i))) %>% 
         mutate(stg = cut(age_sel, 
                          breaks = bins, 
-                         include.lowest = TRUE)) %>% 
+                         include.lowest = TRUE, 
+                         labels = FALSE)) %>% 
         divDyn(., bin = "stg", tax = "accepted_name") %>% 
         as_tibble() %>% 
-        add_column(start_age = bins[-37]) %>% 
+        add_column(start_age = rev(bins[-37])) %>% 
         filter(between(start_age, 0, 150)) %>% 
         select(stg, start_age,
                divRT, divBC, divSIB) %>% 
@@ -62,8 +63,8 @@ get_div <- function(data_set, tax_level, div_metric) {
       list_div[[i]] <- dat_age %>% 
         mutate(age_sel = map_dbl(age_mid, 
                                  ~pluck(.x, i))) %>% 
-        mutate(stg = 95 - cut(max_ma, 
-                              breaks = stages$bottom, 
+        mutate(stg = cut(age_sel, 
+                              breaks = bins, 
                               include.lowest = TRUE, 
                               labels = FALSE)) %>% 
         drop_na(stg) %>% 
@@ -72,12 +73,11 @@ get_div <- function(data_set, tax_level, div_metric) {
                   iter = 100, q = 0.3, type = "sqs", 
                   ref = "reference_no",
                   singleton = "ref") %>% 
-        as_tibble() %>% 
-        add_column(mid_age = stages$mid[1:94]) %>% 
-        filter(between(stg, 70, 94)) %>% 
-        select(stg, mid_age,
+        add_column(start_age = rev(bins[-37])) %>% 
+        filter(between(start_age, 0, 150)) %>% 
+        select(stg, start_age,
                divRT, divBC, divSIB) %>% 
-        rename_with(~str_replace(., "div", tax_level), contains("div")) %>% 
+        rename_with(~str_replace(., "div", tax_level), contains("div")) %>%
         add_column(run = i)
     }
   }
@@ -107,14 +107,15 @@ dat_div_gen_sqs <- get_div(dat_genus, "genus", "sqs")
 # age estimates
 dat_div_spec %>% 
   full_join(dat_div_gen) %>% 
-  write_csv(here("data",
-                 "diversity_continuous_raw.csv"))
+  write_rds(here("data",
+                 "diversity_continuous_raw.rds"), 
+            compress = "gz")
 
 dat_div_spec_sqs %>% 
-  full_join(dat_div_gen_sqs) %>% 
-  pivot_longer(cols = -c(stg, mid_age, run), 
-               names_to = "metric", 
-               values_to = "diversity") %>% 
-  write_csv(here("data",
-                 "diversity_continuous_sqs.csv"))
+  as_tibble() %>% 
+  full_join(dat_div_gen_sqs %>% 
+              as_tibble()) %>% 
+  write_rds(here("data",
+                 "diversity_continuous_sqs.rds"), 
+            compress = "gz")
 
