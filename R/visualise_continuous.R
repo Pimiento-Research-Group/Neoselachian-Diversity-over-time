@@ -14,6 +14,32 @@ dat_sqs <- read_rds(here("data",
 dat_deep_genus <- read_csv(here("data", 
                                  "deepdive_all_genus.csv"))
 
+dat_pyrate_genus <- read_delim(here("data", 
+                                    "all_genus_PyRate_mcmcdiv.log")) %>% 
+  select(it, contains("t_")) %>% 
+  pivot_longer(-it, 
+               names_to = "start_age", 
+               values_to = "diversity") %>% 
+  mutate(start_age = str_remove_all(start_age, "t_"), 
+         start_age = as.double(start_age)) %>% 
+  rename(run = it) %>% 
+  filter(run != 0) %>% 
+  mutate(run = run/500) %>% 
+  add_column(metric = "PyRate")
+
+dat_pyrate_species <- read_delim(here("data", 
+                                    "all_species_input_PyRate_mcmcdiv.log")) %>% 
+  select(it, contains("t_")) %>% 
+  pivot_longer(-it, 
+               names_to = "start_age", 
+               values_to = "diversity") %>% 
+  mutate(start_age = str_remove_all(start_age, "t_"), 
+         start_age = as.double(start_age)) %>% 
+  rename(run = it) %>% 
+  filter(run != 0) %>% 
+  mutate(run = run/500) %>% 
+  add_column(metric = "PyRate")
+
 data(stages, package = "divDyn")
 
 # get epoch age into epochs
@@ -43,11 +69,7 @@ dat_genus <- dat_raw %>%
               mutate(start_age = as.double(start_age))) %>% 
   pivot_longer(cols = c(Raw, SQS, DeepDive), 
                names_to = "metric", 
-               values_to = "diversity") %>% 
-  mutate(metric = ordered(metric, 
-                          levels = c("Raw", 
-                                     "SQS", 
-                                     "DeepDive")))
+               values_to = "diversity") 
 
 
 # visualise
@@ -57,21 +79,30 @@ plot_gen_abs <- dat_genus %>%
   geom_vline(xintercept = epoch_age,
              colour = "grey90") +
   geom_step(aes(group = run), 
-            alpha = 0.07) +
+            alpha = 0.05) +
   geom_step(data = . %>% 
               group_by(start_age, metric) %>% 
-              summarise(diversity = mean(diversity))) +
+              summarise(diversity = mean(diversity)), 
+            linewidth = 0.3) +
+  geom_step(aes(group = run), 
+            data = dat_pyrate_genus, 
+            alpha = 0.004) +
+  geom_step(data = dat_pyrate_genus %>% 
+              group_by(start_age, metric) %>% 
+              summarise(diversity = mean(diversity)), 
+            linewidth = 0.3) +
   labs(y = "Genus Diversity",
-       x = NULL,
+       x = "Myr",
        colour = NULL) +
-  scale_color_manual(values = c("#ad6d8aff",
-                                "#ffbc3cff",
-                                "coral3")) +
-  scale_x_reverse() +
+  scale_color_manual(values = c("grey60", 
+                                "#316286",
+                                "#ad6d8aff",
+                                "#413851")) +
+  scale_x_reverse(breaks = seq(140, 0, by = -20)) +
   coord_geo(dat = list("periods"),
             pos = list("b"),
             alpha = 0.2,
-            height = unit(0.8, "line"),
+            height = unit(1, "line"),
             size = list(10/.pt),
             lab_color = "grey40",
             color = "grey40",
@@ -84,9 +115,21 @@ plot_gen_abs <- dat_genus %>%
         axis.ticks = element_line(colour = "grey50"),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank()) +
-  facet_wrap(~metric, 
-             scales = "free")
+  facet_wrap(~ordered(metric, 
+                      levels = c("Raw", 
+                                 "SQS", 
+                                 "PyRate",
+                                 "DeepDive")), 
+             scales = "free_y", 
+             nrow = 4)
 
+# save
+ggsave(plot_gen_abs, 
+       filename = here("figures",
+                       "genus_comparison.pdf"), 
+       width = 183, height = 100*1.25,
+       units = "mm", 
+       bg = "white")
 
 # differences to DeepDive
 plot_gen_dif <- dat_genus %>% 
@@ -104,10 +147,12 @@ plot_gen_dif <- dat_genus %>%
                values_to = "difference") %>% 
   ggplot(aes(start_age, difference,
              colour = metric)) +
+  geom_hline(yintercept = 0, 
+             colour = "grey20") +
   geom_vline(xintercept = epoch_age,
              colour = "grey90") +
-  geom_step(aes(group = run), 
-            alpha = 0.07) +
+  # geom_step(aes(group = run), 
+  #           alpha = 0.07) +
   geom_step(data = . %>% 
               group_by(start_age, metric) %>% 
               summarise(difference = mean(difference))) +
@@ -137,6 +182,89 @@ plot_gen_dif <- dat_genus %>%
         axis.ticks = element_line(colour = "grey50"),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank())
+
+# save
+ggsave(plot_gen_dif, 
+       filename = here("figures",
+                       "genus_difference.pdf"), 
+       width = 183, height = 100,
+       units = "mm", 
+       bg = "white")
+
+
+# species level -----------------------------------------------------------
+
+# join data
+dat_species <- dat_raw %>%
+  select(stg, start_age, run, Raw = speciesRT) %>% 
+  full_join(dat_sqs %>% 
+              select(stg, start_age, run, SQS = speciesRT)) %>% 
+  pivot_longer(cols = c(Raw, SQS), 
+               names_to = "metric", 
+               values_to = "diversity") %>% 
+  mutate(metric = ordered(metric, 
+                          levels = c("Raw", 
+                                     "SQS")))
+
+
+# visualise
+plot_spec_abs <- dat_species %>%
+  ggplot(aes(start_age, diversity,
+             colour = metric)) +
+  geom_vline(xintercept = epoch_age,
+             colour = "grey90") +
+  geom_step(aes(group = run), 
+            alpha = 0.05) +
+  geom_step(data = . %>% 
+              group_by(start_age, metric) %>% 
+              summarise(diversity = mean(diversity)), 
+            linewidth = 0.3) +
+  geom_step(aes(group = run), 
+            data = dat_pyrate_species, 
+            alpha = 0.004) +
+  geom_step(data = dat_pyrate_species %>% 
+              group_by(start_age, metric) %>% 
+              summarise(diversity = mean(diversity)), 
+            linewidth = 0.3) +
+  labs(y = "Species Diversity",
+       x = "Myr",
+       colour = NULL) +
+  scale_color_manual(values = c("grey60", 
+                                "#316286",
+                                "#ad6d8aff",
+                                "#413851")) +
+  scale_x_reverse(breaks = seq(140, 0, by = -20)) +
+  coord_geo(dat = list("periods"),
+            pos = list("b"),
+            alpha = 0.2,
+            height = unit(1, "line"),
+            size = list(10/.pt),
+            lab_color = "grey40",
+            color = "grey40",
+            abbrv = list(TRUE),
+            fill = "white",
+            expand = TRUE,
+            lwd = list(0.4)) +
+  theme_minimal() +
+  theme(legend.position = "none",
+        axis.ticks = element_line(colour = "grey50"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  facet_wrap(~ordered(metric, 
+                      levels = c("Raw", 
+                                 "SQS", 
+                                 "PyRate",
+                                 "DeepDive")), 
+             scales = "free_y", 
+             nrow = 4)
+
+# save
+ggsave(plot_spec_abs, 
+       filename = here("figures",
+                       "species_comparison.pdf"), 
+       width = 183, height = 100*1.25,
+       units = "mm", 
+       bg = "white")
 
 
 
