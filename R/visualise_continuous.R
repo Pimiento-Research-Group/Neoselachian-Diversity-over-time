@@ -98,18 +98,21 @@ plot_gen_abs <- dat_genus %>%
                                 "#316286",
                                 "#ad6d8aff",
                                 "#413851")) +
-  scale_x_reverse(breaks = seq(140, 0, by = -20)) +
-  coord_geo(dat = list("periods"),
-            pos = list("b"),
+  scale_x_reverse(breaks = seq(140, 0, by = -20), 
+                  limits = c(145, 0)) +
+  coord_geo(dat = list("epochs", 
+                       "periods"),
+            pos = list("b", "b"),
             alpha = 0.2,
-            height = unit(1, "line"),
-            size = list(10/.pt),
+            height = list(unit(0.5, "line"), 
+                          unit(1, "line")),
+            size = list(6/.pt, 10/.pt),
             lab_color = "grey40",
             color = "grey40",
-            abbrv = list(TRUE),
+            abbrv = list(TRUE, TRUE),
             fill = "white",
-            expand = TRUE,
-            lwd = list(0.4)) +
+            expand = FALSE,
+            lwd = list(0.1, 0.4)) +
   theme_minimal() +
   theme(legend.position = "none",
         axis.ticks = element_line(colour = "grey50"),
@@ -233,18 +236,21 @@ plot_spec_abs <- dat_species %>%
                                 "#316286",
                                 "#ad6d8aff",
                                 "#413851")) +
-  scale_x_reverse(breaks = seq(140, 0, by = -20)) +
-  coord_geo(dat = list("periods"),
-            pos = list("b"),
+  scale_x_reverse(breaks = seq(140, 0, by = -20), 
+                  limits = c(145, 0)) +
+  coord_geo(dat = list("epochs", 
+                       "periods"),
+            pos = list("b", "b"),
             alpha = 0.2,
-            height = unit(1, "line"),
-            size = list(10/.pt),
+            height = list(unit(0.5, "line"), 
+                          unit(1, "line")),
+            size = list(6/.pt, 10/.pt),
             lab_color = "grey40",
             color = "grey40",
-            abbrv = list(TRUE),
+            abbrv = list(TRUE, TRUE),
             fill = "white",
-            expand = TRUE,
-            lwd = list(0.4)) +
+            expand = FALSE,
+            lwd = list(0.1, 0.4)) +
   theme_minimal() +
   theme(legend.position = "none",
         axis.ticks = element_line(colour = "grey50"),
@@ -257,7 +263,6 @@ plot_spec_abs <- dat_species %>%
                                  "DeepDive")), 
              scales = "free_y", 
              nrow = 4)
-
 # save
 ggsave(plot_spec_abs, 
        filename = here("figures",
