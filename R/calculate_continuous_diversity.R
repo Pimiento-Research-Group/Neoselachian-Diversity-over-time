@@ -12,13 +12,16 @@ dat_species <- read_rds(here("data",
 dat_genus <- read_rds(here("data", 
                            "fins_filtered_genus.rds"))
 
-# define the bins
-bins <- sort(c(0, 0.0042, 0.0082, 0.0117, 0.126, 0.781, 1.80, 2.58, 3.6, 5.333, 7.246, 11.63, 13.82,
-               15.97, 20.44, 23.03, 28.1, 33.9, 37.8, 41.2, 47.8, 56.0, 59.2,
-               61.6, 66.0, 72.1, 83.6, 86.3, 89.8, 93.9, 100.5, 113., 125., 129.4,
-               132.9, 139.8, 155), decreasing=TRUE)
-
+# stage level data
 data(stages, package = "divDyn")
+
+# define the bins
+bins <- sort(c(145, 139.800,  132.600, 129.400, 125, 113.000, 100.500, 93.900, 
+                 89.800, 86.300, 83.600, 72.100, 66.000, 61.600, 59.200, 56.000, 
+                 47.800, 41.200, 37.710, 33.900, 27.820, 23.030, 20.440, 15.970, 
+                 13.820, 11.630, 7.246, 5.333, 2.580, 0), 
+             decreasing = TRUE)
+
 
 # set up function to calculate continuous diversity ------------------------
 
@@ -49,7 +52,7 @@ get_div <- function(data_set, tax_level, div_metric) {
                          labels = FALSE)) %>% 
         divDyn(., bin = "stg", tax = "accepted_name") %>% 
         as_tibble() %>% 
-        add_column(start_age = rev(bins[-37])) %>% 
+        add_column(start_age = rev(bins[-27])) %>% 
         filter(between(start_age, 0, 150)) %>% 
         select(stg, start_age,
                divRT, divBC, divSIB) %>% 
@@ -73,7 +76,7 @@ get_div <- function(data_set, tax_level, div_metric) {
                   iter = 100, q = 0.3, type = "sqs", 
                   ref = "reference_no",
                   singleton = "ref") %>% 
-        add_column(start_age = rev(bins[-37])) %>% 
+        add_column(start_age = rev(bins[-27])) %>% 
         filter(between(start_age, 0, 150)) %>% 
         select(stg, start_age,
                divRT, divBC, divSIB) %>% 
@@ -103,14 +106,14 @@ dat_div_gen_sqs <- get_div(dat_genus, "genus", "sqs")
 
 # save data ---------------------------------------------------------------
 
-# simplify those cases where there is no variation across
-# age estimates
+# raw estimates
 dat_div_spec %>% 
   full_join(dat_div_gen) %>% 
   write_rds(here("data",
                  "diversity_continuous_raw.rds"), 
             compress = "gz")
 
+# subsampled estimates
 dat_div_spec_sqs %>% 
   as_tibble() %>% 
   full_join(dat_div_gen_sqs %>% 

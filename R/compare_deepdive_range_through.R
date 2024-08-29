@@ -11,17 +11,23 @@ bins <- sort(c(0, 0.0042, 0.0082, 0.0117, 0.126, 0.781, 1.80, 2.58, 3.6, 5.333, 
                132.9, 139.8, 155), decreasing=TRUE)
 
 # deepdive diversity
-dat_deep_genus <- read_csv(here("data", 
-                                "deepdive_all_genus.csv")) %>% 
+dat_deep_species <- read_csv(here("data",
+                                  "deepdive_species",
+                                  "all_64.csv")) %>% 
+  add_column(model = "64") %>% 
+  bind_rows(read_csv(here("data",
+                          "deepdive_species",
+                          "all_128.csv")) %>% 
+              add_column(model = "128")) %>% 
   rowid_to_column("run") %>% 
-  pivot_longer(cols = -run, 
+  pivot_longer(cols = -c(run, model), 
                names_to = "start_age", 
                values_to = "DeepDive") %>% 
   mutate(start_age = as.double(start_age))
 
 # deepdive range-through diversity
 dat_rt <- read_csv(here("data", 
-                        "rt_genus_all.csv")) %>% 
+                        "rt_species_all.csv")) %>% 
   select(range_through_div) %>% 
   rowid_to_column("stg") %>% 
   left_join(tibble(stg = 37:1, start_age = bins)) %>% 
