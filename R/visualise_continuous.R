@@ -61,6 +61,14 @@ epoch_age <- stages %>%
   pull(epoch) %>% 
   {.[-c(1, 2)]}
 
+# set up stages for plotting
+data(stages, package = "deeptime")
+
+stage_cor <- stages %>%
+  as_tibble() %>% 
+  filter(!name  %in% c("Meghalayan", "Northgrippian", "Greenlandian", 
+                       "Late Pleistocene", "Chibanian", "Calabrian",
+                       "Piacenzian", "Zanclean", "Gelasian"))
 
 
 
@@ -126,10 +134,7 @@ plot_spec_abs <- dat_species %>%
        colour = NULL) +
   scale_x_reverse(breaks = seq(140, 0, by = -20), 
                   limits = c(145, 0)) +
-  coord_geo(dat = list(tibble(name = stages$stage, 
-                              max_age = stages$bottom, 
-                              min_age = stages$top, 
-                              abbr = stages$short), 
+  coord_geo(dat = list(stage_cor, 
                        "epochs", 
                        "periods"),
             pos = list("b", "b", "b"),
@@ -149,21 +154,21 @@ plot_spec_abs <- dat_species %>%
   theme(legend.position = "none",
         axis.ticks = element_line(colour = "grey50"),
         panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(), 
-        strip.text = element_text(hjust = 0)) +
+        panel.grid.minor = element_blank()) +
   facet_wrap(~ordered(metric, 
                       levels = c("Raw", 
                                  "SQS", 
                                  "PyRate",
                                  "DeepDive")), 
              scales = "free_y", 
-             nrow = 4)
+             nrow = 4, 
+             strip.position = "right")
 
 # save
 ggsave(plot_spec_abs, 
        filename = here("figures",
                        "species_comparison.pdf"), 
-       width = 183, height = 100*1.5,
+       width = 183, height = 100*2.5,
        units = "mm", 
        bg = "white")
 
@@ -205,24 +210,30 @@ dat_raw %>%
   labs(y = "Difference to DeepDive\n[species, scaled]",
        x = NULL,
        colour = NULL) +
-  scale_color_manual(values = c("grey60",
-                                "#413851"), 
+  scale_color_manual(values = c("coral",
+                                "#316286"), 
                      breaks = c("dif_raw", 
                                 "dif_sqs"), 
                      labels = c("Raw", 
                                 "SQS")) +
-  scale_x_reverse() +
-  coord_geo(dat = list("periods"),
-            pos = list("b"),
+  scale_x_reverse(breaks = seq(140, 0, by = -20), 
+                  limits = c(145, 0)) +
+  coord_geo(dat = list(stage_cor, 
+                       "epochs", 
+                       "periods"),
+            pos = list("b", "b", "b"),
             alpha = 0.2,
-            height = unit(0.8, "line"),
-            size = list(10/.pt),
-            lab_color = "grey40",
-            color = "grey40",
-            abbrv = list(TRUE),
+            height = list(unit(1.25, "line"), 
+                          unit(0.75, "line"), 
+                          unit(0.75, "line")),
+            size = list(6/.pt, 6/.pt, 6/.pt),
+            lab_color = "grey20",
+            color = "grey20",
+            abbrv = list(TRUE, TRUE, FALSE),
+            rot = list(90, 0, 0),
             fill = "white",
-            expand = TRUE,
-            lwd = list(0.4)) +
+            expand = FALSE,
+            lwd = list(0.1, 0.1, 0.1)) +
   theme_minimal() +
   theme(legend.position = c(0.2, 0.9),
         axis.ticks = element_line(colour = "grey50"),
@@ -285,19 +296,22 @@ plot_gen_abs <- dat_genus %>%
                                 "#413851")) +
   scale_x_reverse(breaks = seq(140, 0, by = -20), 
                   limits = c(145, 0)) +
-  coord_geo(dat = list("epochs", 
+  coord_geo(dat = list(stage_cor, 
+                       "epochs", 
                        "periods"),
-            pos = list("b", "b"),
+            pos = list("b", "b", "b"),
             alpha = 0.2,
-            height = list(unit(0.5, "line"), 
-                          unit(1, "line")),
-            size = list(6/.pt, 10/.pt),
-            lab_color = "grey40",
-            color = "grey40",
-            abbrv = list(TRUE, TRUE),
+            height = list(unit(1.25, "line"), 
+                          unit(0.75, "line"), 
+                          unit(0.75, "line")),
+            size = list(6/.pt, 6/.pt, 6/.pt),
+            lab_color = "grey20",
+            color = "grey20",
+            abbrv = list(TRUE, TRUE, FALSE),
+            rot = list(90, 0, 0),
             fill = "white",
             expand = FALSE,
-            lwd = list(0.1, 0.4)) +
+            lwd = list(0.1, 0.1, 0.1)) +
   theme_minimal() +
   theme(legend.position = "none",
         axis.ticks = element_line(colour = "grey50"),
