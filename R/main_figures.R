@@ -47,6 +47,23 @@ epoch_age <- stages %>%
   pull(epoch) %>% 
   {.[-c(1, 2)]}
 
+# set up epochs for plotting
+data(epochs, package = "deeptime")
+
+epoch_cor <- epochs %>%
+  as_tibble() %>% 
+  filter(between(max_age, 0, 145)) %>% 
+  mutate(color = c("#FEF6F2", 
+                   "#FFF1C4", 
+                   "#FFF7B2", 
+                   "#FFED00", 
+                   "#FBCC98", 
+                   "#FAC18A", 
+                   "#F8B77D", 
+                   "#BAD25F", 
+                   "#A0C96D"))
+
+
 # set up stages for plotting
 data(stages, package = "deeptime")
 
@@ -54,8 +71,13 @@ stage_cor <- stages %>%
   as_tibble() %>% 
   filter(!name  %in% c("Meghalayan", "Northgrippian", "Greenlandian", 
                        "Late Pleistocene", "Chibanian", "Calabrian",
-                       "Piacenzian", "Zanclean", "Gelasian"))
+                       "Piacenzian", "Zanclean", "Gelasian")) %>% 
+  add_row(epoch_cor %>% 
+            filter(name %in% c("Pleistocene", "Pliocene"))) %>% 
+  arrange(max_age)
 
+
+  
 # set up function ---------------------------------------------------------
 
 plot_div <- function(data_set, 
@@ -95,7 +117,7 @@ plot_div <- function(data_set,
     scale_y_continuous(limits = c(0, NA)) +
     {if(show_geoscale) 
       coord_geo(dat = list(stage_cor, 
-                           "epochs", 
+                           epoch_cor, 
                            "periods"),
                 pos = list("b", "b", "b"),
                 alpha = 0.2,
@@ -107,7 +129,7 @@ plot_div <- function(data_set,
                 color = "grey20",
                 abbrv = list(TRUE, TRUE, FALSE),
                 rot = list(90, 0, 0),
-                fill = "white",
+                # fill = "white",
                 expand = FALSE,
                 lwd = list(0.1, 0.1, 0.1))} +
     {if(!show_geoscale) 
@@ -163,16 +185,43 @@ ggsave(fig_1,
        bg = "white")
 
 
+# # added holocene
+# plot_holo <- read_csv(here("data",
+#               "deepdive_species",
+#               "all_holo_64.csv")) %>% 
+#   add_column(model = "64") %>% 
+#   bind_rows(read_csv(here("data",
+#                           "deepdive_species",
+#                           "all_holo_128.csv")) %>% 
+#               add_column(model = "128")) %>% 
+#   plot_div(colour_man = "#F95875", 
+#            show_geoscale = TRUE, 
+#            taxon = "Neoselachii [Holocene]")
+# # save
+# ggsave(plot_holo, 
+#        filename = here("figures",
+#                        "species_holocene.pdf"), 
+#        width = 183, height = 100,
+#        units = "mm", 
+#        bg = "white")
+
 
 # per order ---------------------------------------------------------------
 
 # get csv names
-plot_list_order <- list.files(path = here("data",
-                                    "deepdive_order_species"),
+list.files(path = here("data", "deepdive_order_species"),
                             recursive = TRUE,
                             pattern = "\\.csv$",
                             full.names = TRUE) %>% 
-  map(~read_csv(.x))
+  map(function(.x) {
+    dat <- read_csv(.x) 
+    colnames(dat) <- rev(c(145, 139.800,  132.600, 129.400, 125, 113.000, 100.500, 93.900, 
+                       89.800, 86.300, 83.600, 72.100, 66.000, 61.600, 59.200, 56.000, 
+                       47.800, 41.200, 37.710, 33.900, 27.820, 23.030, 20.440, 15.970, 
+                       13.820, 11.630, 7.246, 5.333, 2.580, 0))
+    return(dat)
+  }) %>% 
+  bind_rows()
 
 plot_list_order <- list(order_data = list.files(path = here("data",
                                          "deepdive_order_species"),
