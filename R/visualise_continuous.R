@@ -7,12 +7,15 @@ library(pammtools)
 
 # read data ---------------------------------------------------------------
 
+# raw dat
 dat_raw <- read_rds(here("data",
                           "diversity_continuous_raw.rds"))
 
+# subsampled data
 dat_sqs <- read_rds(here("data",
                          "diversity_continuous_sqs.rds"))
 
+# deepdive predictions
 dat_deep_species <- read_csv(here("data",
                                 "deepdive_species",
                                 "all_64.csv")) %>% 
@@ -25,6 +28,19 @@ dat_deep_species <- read_csv(here("data",
                values_to = "DeepDive") %>% 
   mutate(start_age = as.double(start_age))
 
+dat_deep_genus <- read_csv(here("data",
+                                  "deepdive_genus",
+                                  "all_64.csv")) %>% 
+  bind_rows(read_csv(here("data",
+                          "deepdive_genus",
+                          "all_128.csv"))) %>% 
+  rowid_to_column("run") %>% 
+  pivot_longer(cols = -run, 
+               names_to = "start_age", 
+               values_to = "DeepDive") %>% 
+  mutate(start_age = as.double(start_age))
+
+# pyrate data
 dat_pyrate_genus <- read_delim(here("data", 
                                     "all_genus_PyRate_mcmcdiv.log")) %>% 
   select(it, contains("t_")) %>% 
@@ -207,6 +223,106 @@ ggsave(plot_spec_abs,
        width = 183, height = 100*2.5,
        units = "mm", 
        bg = "white")
+
+
+# genus level -----------------------------------------------------------
+
+# join data
+dat_genus <- dat_raw %>%
+  select(stg, start_age, run, Raw = genusRT) %>% 
+  full_join(dat_sqs %>% 
+              select(stg, start_age, run, SQS = genusRT)) %>% 
+  left_join(dat_deep_genus) %>% 
+  pivot_longer(cols = c(Raw, SQS, DeepDive), 
+               names_to = "metric", 
+               values_to = "diversity") %>% 
+  replace_na(list(diversity = 0)) %>% 
+  group_by(start_age, metric) %>% 
+  summarise(ymin = min(diversity, na.rm = TRUE), 
+            y = mean(diversity, na.rm = TRUE), 
+            ymax = max(diversity, na.rm = TRUE)) %>% 
+  mutate(metric = ordered(metric, 
+                          levels = c("Raw", 
+                                     "SQS", 
+                                     "DeepDive")))
+
+
+# visualise
+plot_spec_abs <- dat_genus %>%
+  ggplot(aes(start_age, y,
+             colour = metric)) +
+  geom_vline(xintercept = epoch_age,
+             colour = "grey95",
+             linewidth = 0.4) +
+  geom_stepribbon(aes(ymin = ymin, 
+                      ymax = ymax), 
+                  alpha = 0.3, 
+                  colour = "grey80", 
+                  linewidth = 0.001, 
+                  fill = "grey20") +
+  geom_step(linewidth = 0.3, 
+            colour = "grey20") +
+  geom_stepribbon(aes(ymin = ymin, 
+                      ymax = ymax), 
+                  data = dat_pyrate_genus %>%
+                    group_by(start_age, metric) %>% 
+                    summarise(ymin = min(diversity, na.rm = TRUE), 
+                              y = mean(diversity),
+                              ymax = max(diversity, na.rm = TRUE)), 
+                  alpha = 0.3, 
+                  colour = "grey80", 
+                  linewidth = 0.001, 
+                  fill = "grey20") +
+  geom_step(data = dat_pyrate_genus %>% 
+              group_by(start_age, metric) %>%
+              summarise(y = mean(diversity)), 
+            linewidth = 0.3, 
+            colour = "grey20") +
+  labs(y = "Genus Diversity",
+       x = "Time (Ma)",
+       colour = NULL) +
+  scale_x_reverse(breaks = seq(140, 0, by = -20), 
+                  limits = c(145, 0)) +
+  scale_y_continuous(limits = c(0, NA)) +
+  coord_geo(dat = list(stage_cor, 
+                       epoch_cor, 
+                       "periods"),
+            pos = list("b", "b", "b"),
+            alpha = 0.2,
+            height = list(unit(1.25, "line"), 
+                          unit(0.75, "line"), 
+                          unit(0.75, "line")),
+            size = list(6/.pt, 6/.pt, 6/.pt),
+            lab_color = "grey20",
+            color = "grey20",
+            abbrv = list(TRUE, TRUE, FALSE),
+            rot = list(90, 0, 0),
+            # fill = "white",
+            expand = FALSE,
+            lwd = list(0.1, 0.1, 0.1)) +
+  theme_minimal() +
+  theme(legend.position = "none",
+        axis.ticks = element_line(colour = "grey50"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  facet_wrap(~ordered(metric, 
+                      levels = c("Raw", 
+                                 "SQS", 
+                                 "PyRate",
+                                 "DeepDive")), 
+             scales = "free_y", 
+             nrow = 4, 
+             strip.position = "right")
+
+
+# save
+ggsave(plot_spec_abs, 
+       filename = here("figures",
+                       "fig_S5.pdf"), 
+       width = 183, height = 100*2.5,
+       units = "mm", 
+       bg = "white")
+
 
 
 

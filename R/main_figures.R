@@ -85,7 +85,8 @@ stage_cor <- stages %>%
 plot_div <- function(data_set, 
                      colour_man, 
                      taxon,
-                     show_geoscale = FALSE) {
+                     show_geoscale = FALSE, 
+                     y_label = "Species Diversity") {
   
   data_set %>%
     rowid_to_column("run") %>% 
@@ -108,7 +109,7 @@ plot_div <- function(data_set,
                     colour = "white", 
                     linewidth = 0.001) +
     geom_step(colour = colour_man) +
-    labs(y = "Species Diversity",
+    labs(y = y_label,
          x = "Time (Ma)",
          colour = NULL, 
          title = taxon) +
@@ -267,6 +268,134 @@ fig_2 <- (plot_list_order[[1]] / plot_list_order[[2]] /
 ggsave(fig_2, 
        filename = here("figures",
                        "fig_2.pdf"), 
+       width = 183*2, height = 100*3,
+       units = "mm", 
+       bg = "white")
+
+
+
+# per genus ---------------------------------------------------------------
+
+# read data 
+dat_all_genus <- read_csv(here("data",
+                                 "deepdive_genus",
+                                 "all_64.csv")) %>% 
+  add_column(model = "64") %>% 
+  bind_rows(read_csv(here("data",
+                          "deepdive_genus",
+                          "all_128.csv")) %>% 
+              add_column(model = "128"))
+
+dat_bat_genus <- read_csv(here("data",
+                                 "deepdive_genus",
+                                 "batoidea_64.csv")) %>% 
+  add_column(model = "64") %>% 
+  bind_rows(read_csv(here("data",
+                          "deepdive_genus",
+                          "batoidea_128.csv")) %>% 
+              add_column(model = "128"))
+
+dat_sel_genus <- read_csv(here("data",
+                                 "deepdive_genus",
+                                 "selachii_64.csv")) %>% 
+  add_column(model = "64") %>% 
+  bind_rows(read_csv(here("data",
+                          "deepdive_genus",
+                          "selachii_128.csv")) %>% 
+              add_column(model = "128"))
+# all
+plot_all <- plot_div(dat_all_genus,
+                     colour_man = "#F95875", 
+                     taxon = "Neoselachii", 
+                     y_label = "Genus Diversity")
+# selachii
+plot_sel <- plot_div(dat_sel_genus, 
+                     colour_man = "#681270", 
+                     taxon = "Selachii", 
+                     y_label = "Genus Diversity")
+# batoidea
+plot_bat <- plot_div(dat_bat_genus,
+                     colour_man = "#2F899D", 
+                     show_geoscale = TRUE, 
+                     taxon = "Batoidea", 
+                     y_label = "Genus Diversity")
+
+
+# patch together
+fig_S3 <- plot_all/ plot_sel/ plot_bat +
+  plot_annotation(tag_levels = "A")
+
+# save
+ggsave(fig_S3, 
+       filename = here("figures",
+                       "fig_S3.pdf"), 
+       width = 183, height = 100*2.5,
+       units = "mm", 
+       bg = "white")
+
+
+# per order 
+
+# get csv names
+list_order <- list.files(path = here("data", "deepdive_order_genus"),
+                         recursive = TRUE,
+                         pattern = "\\.csv$",
+                         full.names = TRUE) %>% 
+  map(function(.x) {
+    dat <- read_csv(.x, show_col_types = FALSE) 
+    colnames(dat) <- rev(c(145, 139.800,  132.600, 129.400, 125, 113.000, 100.500, 93.900, 
+                           89.800, 86.300, 83.600, 72.100, 66.000, 61.600, 59.200, 56.000, 
+                           47.800, 41.200, 37.710, 33.900, 27.820, 23.030, 20.440, 15.970, 
+                           13.820, 11.630, 7.246, 5.333, 2.580, 0))
+    return(dat)
+  }) %>% 
+  bind_rows() %>% 
+  mutate(model = rep(list.files(path = here("data", "deepdive_order_genus"),
+                                recursive = TRUE,
+                                pattern = "\\.csv$",
+                                full.names = FALSE) %>% 
+                       word(., sep = "_") %>% 
+                       str_to_sentence(), 
+                     each = 100)) %>% 
+  replace_na(list(`145` = 0)) %>% 
+  group_split(model)
+
+
+# plot
+plot_list_order <- list(order_data = list_order, 
+                        order_names = list.files(path = here("data", "deepdive_order_genus"),
+                                                 recursive = TRUE,
+                                                 pattern = "\\.csv$",
+                                                 full.names = FALSE) %>% 
+                          word(., sep = "_") %>% 
+                          str_to_sentence() %>% 
+                          unique(), 
+                        order_colour = c(rep("#681270", 3), 
+                                         "#2F899D", "#681270", 
+                                         "#2F899D", "#2F899D", "#681270"), 
+                        order_x_axis = c(FALSE, FALSE, FALSE, FALSE, 
+                                         TRUE, FALSE, TRUE, FALSE)) %>% 
+  pmap(., 
+       function(order_data,  order_colour, 
+                order_names, order_x_axis){
+         plot_div(order_data, 
+                  colour_man = order_colour, 
+                  taxon = order_names, 
+                  show_geoscale = order_x_axis, 
+                  y_label = "Genus Diversity")})
+
+# patch together
+fig_s4 <- (plot_list_order[[1]] / plot_list_order[[2]] /
+            plot_list_order[[3]] /plot_list_order[[5]] |
+            plot_list_order[[8]] / plot_list_order[[4]] / 
+            plot_list_order[[6]] / plot_list_order[[7]]) +
+  plot_annotation(tag_levels = "A")
+
+
+# save
+ggsave(fig_s4, 
+       filename = here("figures",
+                       "fig_S4.pdf"), 
        width = 183*2, height = 100*3,
        units = "mm", 
        bg = "white")
