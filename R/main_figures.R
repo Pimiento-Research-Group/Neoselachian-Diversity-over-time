@@ -92,7 +92,8 @@ plot_div <- function(data_set,
                  values_to = "DeepDive") %>% 
     group_by(start_age) %>% 
     reframe(quant = quantile(DeepDive, 
-                             probs = c(0.25, 0.5, 0.75)), 
+                             probs = c(0.25, 0.5, 0.75), 
+                             na.rm = TRUE), 
             quart = c("ymin", "y", "ymax")) %>% 
     pivot_wider(values_from = quant, 
                 names_from = quart) %>%  
@@ -209,7 +210,7 @@ ggsave(fig_1,
 # per order ---------------------------------------------------------------
 
 # get csv names
-list.files(path = here("data", "deepdive_order_species"),
+list_order <- list.files(path = here("data", "deepdive_order_species"),
                             recursive = TRUE,
                             pattern = "\\.csv$",
                             full.names = TRUE) %>% 
@@ -221,33 +222,43 @@ list.files(path = here("data", "deepdive_order_species"),
                        13.820, 11.630, 7.246, 5.333, 2.580, 0))
     return(dat)
   }) %>% 
-  bind_rows()
+  bind_rows() %>% 
+  mutate(model = rep(list.files(path = here("data", "deepdive_order_species"),
+                            recursive = TRUE,
+                            pattern = "\\.csv$",
+                            full.names = FALSE) %>% 
+           word(., sep = "_") %>% 
+           str_to_sentence(), 
+           each = 100)) %>% 
+  group_split(model)
 
-plot_list_order <- list(order_data = list.files(path = here("data",
-                                         "deepdive_order_species"),
-                             recursive = TRUE,
-                             pattern = "\\.csv$",
-                             full.names = TRUE) %>% 
-       map(~read_csv(.x)), 
-     order_names = list.files(path = here("data",
-                                          "deepdive_order_species"),
-                              recursive = TRUE,
-                              pattern = "\\.csv$",
-                              full.names = FALSE) %>% 
-       str_remove_all(".csv"), 
-     order_colour = c(rep("#681270", 5), 
-                         rep("#2F899D", 2))) %>% 
+
+# plot
+plot_list_order <- list(order_data = list_order, 
+                        order_names = list.files(path = here("data", "deepdive_order_species"),
+                                                 recursive = TRUE,
+                                                 pattern = "\\.csv$",
+                                                 full.names = FALSE) %>% 
+                          word(., sep = "_") %>% 
+                          str_to_sentence() %>% 
+                          unique(), 
+                        order_colour = c(rep("#681270", 5), 
+                                         rep("#2F899D", 3)), 
+                        order_x_axis = c(FALSE, FALSE, FALSE, TRUE, 
+                                         FALSE, FALSE, FALSE, TRUE)) %>% 
   pmap(., 
-       function(order_data,  order_colour, order_names){
+       function(order_data,  order_colour, 
+                order_names, order_x_axis){
          plot_div(order_data, 
-               colour_man = order_colour, 
-               taxon = order_names)})
+                  colour_man = order_colour, 
+                  taxon = order_names, 
+                  show_geoscale = order_x_axis)})
 
 # patch together
-fig_2 <- (plot_list_order[[1]] / plot_list_order[[2]] / 
-  plot_list_order[[3]] /plot_list_order[[4]]) |
-  (plot_list_order[[5]] / plot_list_order[[6]] / 
-  plot_list_order[[7]] / plot_spacer()) +
+fig_2 <- (plot_list_order[[1]] / plot_list_order[[2]] /
+  plot_list_order[[3]] /plot_list_order[[4]] |
+  plot_list_order[[5]] / plot_list_order[[6]] / 
+  plot_list_order[[7]] / plot_list_order[[8]]) +
   plot_annotation(tag_levels = "A")
 
 
@@ -255,6 +266,6 @@ fig_2 <- (plot_list_order[[1]] / plot_list_order[[2]] /
 ggsave(fig_2, 
        filename = here("figures",
                        "fig_2.pdf"), 
-       width = 183*2, height = 100*5,
+       width = 183*2, height = 100*3,
        units = "mm", 
        bg = "white")
