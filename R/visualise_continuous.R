@@ -2,6 +2,8 @@ library(tidyverse)
 library(here)
 library(patchwork)
 library(deeptime)
+library(pammtools)
+
 
 # read data ---------------------------------------------------------------
 
@@ -167,7 +169,7 @@ plot_spec_abs <- dat_species %>%
 # save
 ggsave(plot_spec_abs, 
        filename = here("figures",
-                       "species_comparison.pdf"), 
+                       "fig_S2.pdf"), 
        width = 183, height = 100*2.5,
        units = "mm", 
        bg = "white")
