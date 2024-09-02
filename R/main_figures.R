@@ -93,12 +93,9 @@ plot_div <- function(data_set,
                  names_to = "start_age", 
                  values_to = "DeepDive") %>% 
     group_by(start_age) %>% 
-    reframe(quant = quantile(DeepDive, 
-                             probs = c(0.25, 0.5, 0.75), 
-                             na.rm = TRUE), 
-            quart = c("ymin", "y", "ymax")) %>% 
-    pivot_wider(values_from = quant, 
-                names_from = quart) %>%  
+    summarise(ymin = min(DeepDive, na.rm = TRUE), 
+              y = mean(DeepDive, na.rm = TRUE), 
+              ymax = max(DeepDive, na.rm = TRUE)) %>% 
     mutate(start_age = as.double(start_age)) %>% 
     ggplot(aes(start_age, y)) +
     geom_vline(xintercept = epoch_age,
@@ -112,7 +109,7 @@ plot_div <- function(data_set,
                     linewidth = 0.001) +
     geom_step(colour = colour_man) +
     labs(y = "Species Diversity",
-         x = "Myr",
+         x = "Time (Ma)",
          colour = NULL, 
          title = taxon) +
     scale_x_reverse(breaks = seq(140, 0, by = -20), 
@@ -217,7 +214,7 @@ list_order <- list.files(path = here("data", "deepdive_order_species"),
                             pattern = "\\.csv$",
                             full.names = TRUE) %>% 
   map(function(.x) {
-    dat <- read_csv(.x) 
+    dat <- read_csv(.x, show_col_types = FALSE) 
     colnames(dat) <- rev(c(145, 139.800,  132.600, 129.400, 125, 113.000, 100.500, 93.900, 
                        89.800, 86.300, 83.600, 72.100, 66.000, 61.600, 59.200, 56.000, 
                        47.800, 41.200, 37.710, 33.900, 27.820, 23.030, 20.440, 15.970, 
@@ -232,6 +229,7 @@ list_order <- list.files(path = here("data", "deepdive_order_species"),
            word(., sep = "_") %>% 
            str_to_sentence(), 
            each = 100)) %>% 
+  replace_na(list(`145` = 0)) %>% 
   group_split(model)
 
 
@@ -244,10 +242,11 @@ plot_list_order <- list(order_data = list_order,
                           word(., sep = "_") %>% 
                           str_to_sentence() %>% 
                           unique(), 
-                        order_colour = c(rep("#681270", 5), 
-                                         rep("#2F899D", 3)), 
-                        order_x_axis = c(FALSE, FALSE, FALSE, TRUE, 
-                                         FALSE, FALSE, FALSE, TRUE)) %>% 
+                        order_colour = c(rep("#681270", 3), 
+                                         "#2F899D", "#681270", 
+                                         "#2F899D", "#2F899D", "#681270"), 
+                        order_x_axis = c(FALSE, FALSE, FALSE, FALSE, 
+                                         TRUE, FALSE, TRUE, FALSE)) %>% 
   pmap(., 
        function(order_data,  order_colour, 
                 order_names, order_x_axis){
@@ -258,9 +257,9 @@ plot_list_order <- list(order_data = list_order,
 
 # patch together
 fig_2 <- (plot_list_order[[1]] / plot_list_order[[2]] /
-  plot_list_order[[3]] /plot_list_order[[4]] |
-  plot_list_order[[5]] / plot_list_order[[6]] / 
-  plot_list_order[[7]] / plot_list_order[[8]]) +
+  plot_list_order[[3]] /plot_list_order[[5]] |
+  plot_list_order[[8]] / plot_list_order[[4]] / 
+  plot_list_order[[6]] / plot_list_order[[7]]) +
   plot_annotation(tag_levels = "A")
 
 

@@ -71,12 +71,9 @@ stage_cor <- stages %>%
 # reframe
 dat_plot <-  dat_deep_species %>%
   group_by(start_age) %>% 
-  reframe(quant = quantile(DeepDive, 
-                           probs = c(0.25, 0.5, 0.75), 
-                           na.rm = TRUE), 
-          quart = c("ymin", "y", "ymax")) %>%  
-  pivot_wider(values_from = quant, 
-              names_from = quart) %>%  
+  summarise(ymin = min(DeepDive, na.rm = TRUE), 
+            y = mean(DeepDive, na.rm = TRUE), 
+            ymax = max(DeepDive, na.rm = TRUE)) %>%   
   mutate(start_age = as.double(start_age))
 
 # line plot

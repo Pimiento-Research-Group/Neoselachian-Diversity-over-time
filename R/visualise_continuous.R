@@ -121,13 +121,11 @@ dat_species <- dat_raw %>%
   pivot_longer(cols = c(Raw, SQS, DeepDive), 
                names_to = "metric", 
                values_to = "diversity") %>% 
+  replace_na(list(diversity = 0)) %>% 
   group_by(start_age, metric) %>% 
-  reframe(quant = quantile(diversity, 
-                           probs = c(0.25, 0.5, 0.75), 
-                           na.rm = TRUE), 
-          quart = c("ymin", "diversity", "ymax")) %>% 
-  pivot_wider(values_from = quant, 
-              names_from = quart) %>% 
+  summarise(ymin = min(diversity, na.rm = TRUE), 
+            y = mean(diversity, na.rm = TRUE), 
+            ymax = max(diversity, na.rm = TRUE)) %>% 
   mutate(metric = ordered(metric, 
                           levels = c("Raw", 
                                      "SQS", 
@@ -136,7 +134,7 @@ dat_species <- dat_raw %>%
 
 # visualise
 plot_spec_abs <- dat_species %>%
-  ggplot(aes(start_age, diversity,
+  ggplot(aes(start_age, y,
              colour = metric)) +
   geom_vline(xintercept = epoch_age,
              colour = "grey95",
@@ -152,26 +150,25 @@ plot_spec_abs <- dat_species %>%
   geom_stepribbon(aes(ymin = ymin, 
                       ymax = ymax), 
                   data = dat_pyrate_species %>%
-                    group_by(start_age, metric) %>%
-                    reframe(
-                      quant = quantile(diversity, probs = c(0.25, 0.5, 0.75)),
-                      quart = c("ymin", "diversity", "ymax")
-                    ) %>%
-                    pivot_wider(values_from = quant, names_from = quart), 
+                    group_by(start_age, metric) %>% 
+                    summarise(ymin = min(diversity, na.rm = TRUE), 
+                              y = mean(diversity),
+                              ymax = max(diversity, na.rm = TRUE)), 
                   alpha = 0.3, 
                   colour = "grey80", 
                   linewidth = 0.001, 
                   fill = "grey20") +
   geom_step(data = dat_pyrate_species %>% 
               group_by(start_age, metric) %>%
-              summarise(diversity = mean(diversity)), 
+              summarise(y = mean(diversity)), 
             linewidth = 0.3, 
             colour = "grey20") +
   labs(y = "Species Diversity",
-       x = "Myr",
+       x = "Time (Ma)",
        colour = NULL) +
   scale_x_reverse(breaks = seq(140, 0, by = -20), 
                   limits = c(145, 0)) +
+  scale_y_continuous(limits = c(0, NA)) +
   coord_geo(dat = list(stage_cor, 
                        epoch_cor, 
                        "periods"),
@@ -201,6 +198,7 @@ plot_spec_abs <- dat_species %>%
              scales = "free_y", 
              nrow = 4, 
              strip.position = "right")
+
 
 # save
 ggsave(plot_spec_abs, 
