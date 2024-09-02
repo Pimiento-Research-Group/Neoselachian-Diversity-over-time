@@ -22,6 +22,9 @@ dat_deep_species <- read_csv(here("data",
 
 
 
+data(stages, package = "divDyn")
+
+
 # get epoch age into epochs
 epoch_age <- stages %>% 
   as_tibble() %>% 
@@ -46,7 +49,9 @@ epoch_cor <- epochs %>%
                    "#FAC18A", 
                    "#F8B77D", 
                    "#BAD25F", 
-                   "#A0C96D"))
+                   "#A0C96D")) %>% 
+  mutate(abbr = str_replace_all(abbr, "LC", "UC"), 
+         abbr = str_replace_all(abbr, "EC", "LC"))
 
 
 # set up stages for plotting
@@ -60,7 +65,6 @@ stage_cor <- stages %>%
   add_row(epoch_cor %>% 
             filter(name %in% c("Pleistocene", "Pliocene"))) %>% 
   arrange(max_age)
-
 
 # visualise ------------------------------------------------------------------
 
@@ -82,19 +86,26 @@ plot_line <- dat_plot %>%
              colour = "grey90") +
   geom_ribbon(aes(ymin = ymin, 
                   ymax = ymax), 
-              alpha = 0.3) +
-  geom_point(shape = 21) +
-  geom_line() +
+              alpha = 0.3, 
+              fill = "grey20", 
+              colour = "white") +
+  geom_point(shape = 21, 
+             colour = "grey20", 
+             fill = "white") +
+  geom_line(colour = "grey20") +
   labs(y = "Species Diversity",
        x = "Myr") +
-  scale_x_reverse(breaks = seq(140, 0, by = -20)) +
-  coord_geo(dat = list(stage_cor,
-                       epoch_cor,
+  scale_x_reverse(breaks = seq(140, 0, by = -20), 
+                  limits = c(146, -5)) +
+  scale_y_continuous(breaks = seq(0, 2500, by = 500), 
+                     limits = c(0, 2800)) +
+  coord_geo(dat = list(stage_cor, 
+                       epoch_cor, 
                        "periods"),
             pos = list("b", "b", "b"),
             alpha = 0.2,
-            height = list(unit(1.25, "line"),
-                          unit(0.75, "line"),
+            height = list(unit(1.25, "line"), 
+                          unit(0.75, "line"), 
                           unit(0.75, "line")),
             size = list(6/.pt, 6/.pt, 6/.pt),
             lab_color = "grey20",
@@ -119,31 +130,19 @@ plot_step <- dat_plot %>%
   geom_stepribbon(aes(ymin = ymin, 
                       ymax = ymax), 
                   alpha = 0.15, 
+                  fill = "grey20",
                   colour = "white", 
-                  linewidth = 0) +
-  geom_step() +
+                  linewidth = 0.001) +
+  geom_step(colour = "grey20") +
   labs(y = "Genus Diversity",
        x = "Myr",
        colour = NULL) +
   labs(y = "Species Diversity",
        x = "Myr") +
-  scale_x_reverse(breaks = seq(140, 0, by = -20)) +
-  # coord_geo(dat = list(stage_cor, 
-  #                      epoch_cor, 
-  #                      "periods"),
-  #           pos = list("b", "b", "b"),
-  #           alpha = 0.2,
-  #           height = list(unit(1.25, "line"), 
-  #                         unit(0.75, "line"), 
-  #                         unit(0.75, "line")),
-  #           size = list(6/.pt, 6/.pt, 6/.pt),
-  #           lab_color = "grey20",
-  #           color = "grey20",
-  #           abbrv = list(TRUE, TRUE, FALSE),
-  #           rot = list(90, 0, 0),
-  #           # fill = "white",
-  #           expand = FALSE,
-  #           lwd = list(0.1, 0.1, 0.1)) +
+  scale_x_reverse(breaks = seq(140, 0, by = -20), 
+                  limits = c(146, -5)) +
+  scale_y_continuous(breaks = seq(0, 2500, by = 500), 
+                     limits = c(0, 2800)) +
   coord_geo(dat = "epochs",
             pos = "b",
             alpha = 0,
@@ -159,7 +158,8 @@ plot_step <- dat_plot %>%
         panel.grid.minor = element_blank())
 
 # patch together
-plot_fin <- plot_step / plot_line
+# plot_fin <- 
+plot_step / plot_line
 
 # save
 ggsave(plot_fin, 

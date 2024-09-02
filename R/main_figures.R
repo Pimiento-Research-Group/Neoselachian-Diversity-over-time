@@ -61,7 +61,9 @@ epoch_cor <- epochs %>%
                    "#FAC18A", 
                    "#F8B77D", 
                    "#BAD25F", 
-                   "#A0C96D"))
+                   "#A0C96D")) %>% 
+  mutate(abbr = str_replace_all(abbr, "LC", "UC"), 
+         abbr = str_replace_all(abbr, "EC", "LC"))
 
 
 # set up stages for plotting
@@ -107,7 +109,7 @@ plot_div <- function(data_set,
                     alpha = 0.15, 
                     fill = colour_man, 
                     colour = "white", 
-                    linewidth = 0) +
+                    linewidth = 0.001) +
     geom_step(colour = colour_man) +
     labs(y = "Species Diversity",
          x = "Myr",

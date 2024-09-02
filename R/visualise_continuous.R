@@ -63,6 +63,38 @@ epoch_age <- stages %>%
   pull(epoch) %>% 
   {.[-c(1, 2)]}
 
+data(stages, package = "divDyn")
+
+
+# get epoch age into epochs
+epoch_age <- stages %>% 
+  as_tibble() %>% 
+  group_by(series) %>% 
+  summarise(epoch = min(top)) %>% 
+  arrange(epoch) %>% 
+  filter(epoch <= 140) %>% 
+  pull(epoch) %>% 
+  {.[-c(1, 2)]}
+
+# set up epochs for plotting
+data(epochs, package = "deeptime")
+
+epoch_cor <- epochs %>%
+  as_tibble() %>% 
+  filter(between(max_age, 0, 145)) %>% 
+  mutate(color = c("#FEF6F2", 
+                   "#FFF1C4", 
+                   "#FFF7B2", 
+                   "#FFED00", 
+                   "#FBCC98", 
+                   "#FAC18A", 
+                   "#F8B77D", 
+                   "#BAD25F", 
+                   "#A0C96D")) %>% 
+  mutate(abbr = str_replace_all(abbr, "LC", "UC"), 
+         abbr = str_replace_all(abbr, "EC", "LC"))
+
+
 # set up stages for plotting
 data(stages, package = "deeptime")
 
@@ -70,7 +102,11 @@ stage_cor <- stages %>%
   as_tibble() %>% 
   filter(!name  %in% c("Meghalayan", "Northgrippian", "Greenlandian", 
                        "Late Pleistocene", "Chibanian", "Calabrian",
-                       "Piacenzian", "Zanclean", "Gelasian"))
+                       "Piacenzian", "Zanclean", "Gelasian")) %>% 
+  add_row(epoch_cor %>% 
+            filter(name %in% c("Pleistocene", "Pliocene"))) %>% 
+  arrange(max_age)
+
 
 
 
@@ -137,7 +173,7 @@ plot_spec_abs <- dat_species %>%
   scale_x_reverse(breaks = seq(140, 0, by = -20), 
                   limits = c(145, 0)) +
   coord_geo(dat = list(stage_cor, 
-                       "epochs", 
+                       epoch_cor, 
                        "periods"),
             pos = list("b", "b", "b"),
             alpha = 0.2,
@@ -149,7 +185,7 @@ plot_spec_abs <- dat_species %>%
             color = "grey20",
             abbrv = list(TRUE, TRUE, FALSE),
             rot = list(90, 0, 0),
-            fill = "white",
+            # fill = "white",
             expand = FALSE,
             lwd = list(0.1, 0.1, 0.1)) +
   theme_minimal() +
