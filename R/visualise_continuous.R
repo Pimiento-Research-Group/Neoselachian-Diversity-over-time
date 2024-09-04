@@ -67,17 +67,6 @@ dat_pyrate_species <- read_delim(here("data",
   mutate(run = run/500) %>% 
   add_column(metric = "PyRate")
 
-data(stages, package = "divDyn")
-
-# get epoch age into epochs
-epoch_age <- stages %>% 
-  as_tibble() %>% 
-  group_by(series) %>% 
-  summarise(epoch = min(top)) %>% 
-  arrange(epoch) %>% 
-  filter(epoch <= 140) %>% 
-  pull(epoch) %>% 
-  {.[-c(1, 2)]}
 
 data(stages, package = "divDyn")
 
