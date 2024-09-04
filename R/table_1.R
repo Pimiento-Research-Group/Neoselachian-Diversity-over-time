@@ -4,51 +4,36 @@ library(writexl)
 
 # read data ---------------------------------------------------------------
 
+# set up function
+get_data <- function(file_order, 
+                     taxon_name) {
+  read_csv(here("data",
+                file_order,
+                paste0(taxon_name, "_64.csv"))) %>% 
+    bind_rows(read_csv(here("data",
+                            file_order,
+                            paste0(taxon_name, "_128.csv")))) %>% 
+    rowid_to_column("run") %>% 
+    pivot_longer(cols = -run, 
+                 names_to = "start_age", 
+                 values_to = "DeepDive") %>% 
+    mutate(start_age = as.double(start_age)) %>% 
+    group_by(start_age) %>% 
+    summarise(mean_div = mean(DeepDive), 
+              min_div = min(DeepDive), 
+              max_div = max(DeepDive))
+  
+}
+
+
 # neoselachii
-dat_neo_species <- read_csv(here("data",
-                                  "deepdive_species",
-                                  "all_64.csv")) %>% 
-  bind_rows(read_csv(here("data",
-                          "deepdive_species",
-                          "all_128.csv"))) %>% 
-  rowid_to_column("run") %>% 
-  pivot_longer(cols = -run, 
-               names_to = "start_age", 
-               values_to = "DeepDive") %>% 
-  mutate(start_age = as.double(start_age)) %>% 
-  group_by(start_age) %>% 
-  summarise(mean_div = mean(DeepDive))
+dat_neo_species <- get_data("deepdive_species", "all")
 
 # batoidea
-dat_bat_species <- read_csv(here("data",
-                                 "deepdive_species",
-                                 "batoidea_64.csv")) %>% 
-  bind_rows(read_csv(here("data",
-                          "deepdive_species",
-                          "batoidea_128.csv"))) %>% 
-  rowid_to_column("run") %>% 
-  pivot_longer(cols = -run, 
-               names_to = "start_age", 
-               values_to = "DeepDive") %>% 
-  mutate(start_age = as.double(start_age)) %>% 
-  group_by(start_age) %>% 
-  summarise(mean_div = mean(DeepDive))
-
+dat_bat_species <- get_data("deepdive_species", "batoidea")
 
 # selachii
-dat_sel_species <- read_csv(here("data",
-                                 "deepdive_species",
-                                 "selachii_64.csv")) %>% 
-  bind_rows(read_csv(here("data",
-                          "deepdive_species",
-                          "selachii_128.csv"))) %>% 
-  rowid_to_column("run") %>% 
-  pivot_longer(cols = -run, 
-               names_to = "start_age", 
-               values_to = "DeepDive") %>% 
-  mutate(start_age = as.double(start_age)) %>% 
-  group_by(start_age) %>% 
-  summarise(mean_div = mean(DeepDive))
+dat_sel_species <- get_data("deepdive_species", "selachii")
 
 # per order
 dat_ord_species <- list.files(path = here("data", "deepdive_order_species"),
@@ -77,31 +62,20 @@ dat_ord_species <- list.files(path = here("data", "deepdive_order_species"),
                values_to = "DeepDive") %>% 
   mutate(start_age = as.double(start_age)) %>% 
   group_by(taxon, start_age) %>% 
-  summarise(mean_div = mean(DeepDive))
+  summarise(mean_div = mean(DeepDive), 
+            min_div = min(DeepDive), 
+            max_div = max(DeepDive))
 
+# stage data
+epoch_age <- read_rds(here("data", 
+                           "epoch_age.rds"))
 
+epoch_cor <- read_rds(here("data",
+                           "epoch_cor.rds"))
 
-# set up stages -----------------------------------------------------------
-
-# set up epochs for plotting
-data(epochs, package = "deeptime")
-
-epoch_cor <- epochs %>%
-  as_tibble() %>% 
-  filter(between(max_age, 0, 145))
-
-# set up stages for plotting
-data(stages, package = "deeptime")
-
-stages_cor <- stages %>% 
-  as_tibble() %>% 
-  filter(!name  %in% c("Meghalayan", "Northgrippian", "Greenlandian", 
-                       "Late Pleistocene", "Chibanian", "Calabrian",
-                       "Piacenzian", "Zanclean", "Gelasian")) %>% 
-  add_row(epoch_cor %>% 
-            filter(name %in% c("Pleistocene", "Pliocene"))) %>% 
-  arrange(max_age) %>% 
-  select(stage = name, start_age = max_age) 
+stage_cor <- read_rds(here("data", 
+                           "stage_cor.rds")) %>% 
+  select(stage = name, start_age = max_age)
 
 # combine in one dataframe ------------------------------------------------
 
@@ -116,58 +90,20 @@ dat_neo_species %>%
                          .before = "start_age")) %>% 
   bind_rows(dat_ord_species) %>% 
   filter(start_age > 0) %>% 
-  left_join(stages_cor) %>% 
+  left_join(stage_cor) %>% 
   write_xlsx(here("data", "taxa_per_stage_species.xlsx"))
   
-
 
 #  same for genus level ---------------------------------------------------
 
 # neoselachii
-dat_neo_genus <- read_csv(here("data",
-                                 "deepdive_genus",
-                                 "all_64.csv")) %>% 
-  bind_rows(read_csv(here("data",
-                          "deepdive_genus",
-                          "all_128.csv"))) %>% 
-  rowid_to_column("run") %>% 
-  pivot_longer(cols = -run, 
-               names_to = "start_age", 
-               values_to = "DeepDive") %>% 
-  mutate(start_age = as.double(start_age)) %>% 
-  group_by(start_age) %>% 
-  summarise(mean_div = mean(DeepDive))
+dat_neo_genus <- get_data("deepdive_genus", "all")
 
 # batoidea
-dat_bat_genus <- read_csv(here("data",
-                                 "deepdive_genus",
-                                 "batoidea_64.csv")) %>% 
-  bind_rows(read_csv(here("data",
-                          "deepdive_genus",
-                          "batoidea_128.csv"))) %>% 
-  rowid_to_column("run") %>% 
-  pivot_longer(cols = -run, 
-               names_to = "start_age", 
-               values_to = "DeepDive") %>% 
-  mutate(start_age = as.double(start_age)) %>% 
-  group_by(start_age) %>% 
-  summarise(mean_div = mean(DeepDive))
-
+dat_bat_genus <- get_data("deepdive_genus", "batoidea")
 
 # selachii
-dat_sel_genus <- read_csv(here("data",
-                                 "deepdive_genus",
-                                 "selachii_64.csv")) %>% 
-  bind_rows(read_csv(here("data",
-                          "deepdive_genus",
-                          "selachii_128.csv"))) %>% 
-  rowid_to_column("run") %>% 
-  pivot_longer(cols = -run, 
-               names_to = "start_age", 
-               values_to = "DeepDive") %>% 
-  mutate(start_age = as.double(start_age)) %>% 
-  group_by(start_age) %>% 
-  summarise(mean_div = mean(DeepDive))
+dat_sel_genus <- get_data("deepdive_genus", "selachii")
 
 # per order
 dat_ord_genus <- list.files(path = here("data", "deepdive_order_genus"),
@@ -196,7 +132,9 @@ dat_ord_genus <- list.files(path = here("data", "deepdive_order_genus"),
                values_to = "DeepDive") %>% 
   mutate(start_age = as.double(start_age)) %>% 
   group_by(taxon, start_age) %>% 
-  summarise(mean_div = mean(DeepDive))
+  summarise(mean_div = mean(DeepDive), 
+            min_div = min(DeepDive), 
+            max_div = max(DeepDive))
 
 # combine in one dataframe 
 dat_neo_genus %>% 
@@ -210,7 +148,8 @@ dat_neo_genus %>%
                          .before = "start_age")) %>% 
   bind_rows(dat_ord_genus) %>% 
   filter(start_age > 0) %>% 
-  left_join(stages_cor) %>% 
+  left_join(stage_cor) %>% 
+  group_by(taxon) %>% 
   write_xlsx(here("data", "taxa_per_stage_genus.xlsx"))
 
 
