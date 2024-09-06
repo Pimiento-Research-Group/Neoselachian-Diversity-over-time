@@ -1,94 +1,90 @@
-#### GOAL: CREATE ALLUVIAL DIAGRAM W/ MAPS TO SHOW PALEOOCEAN BASINS THROUGH TIME ####
-## V1
-## 16.03.23
-## Author: Amanda Gardiner
-## Goal: Create an alluvial diagram to show the paleoocean basins and how they morphed through time
-##       Create maps showing the world at set points in time to put above alluvial chart for reference.
-####
-
-
-# Library necessary packages
+# load libraries
+library(here)
 library(readxl)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
+library(tidyverse)
 library(ggalluvial)
-library(plotly)
 
-ocean_dat <- read_xlsx('/Users/amandagardiner/Downloads/Paleo_ocean_timeline.xlsx', 
+
+
+
+dat_ocean <- read_xlsx(here("data", "Paleo_ocean_timeline.xlsx"), 
                        sheet = 'Time_Series')
 
-ocean_dat[ocean_dat == "Western Tethys"] <- "WT"
-ocean_dat[ocean_dat == "Tethys Seaway"] <- "TS"
-ocean_dat[ocean_dat == "SEAS"] <- "SAES"
+dat_ocean_age <- read_xlsx(here("data", "Paleo_ocean_timeline.xlsx"),
+                           sheet = 1) %>% 
+  select(basin = `Paleo-Ocean Basin`, 
+         epoch = `Start Epoch`, 
+         age = `Start MA`)
 
-colorfill <- c("#8CCD57", "#A6D84A", 
-               "#FDA75F", "#FDB46C", "#FEC07A", "#FFFF00", 
-               "#FFFF99", "#FFEFAF", "#FEEBD2")
+epoch_cor <- read_rds(here("data",
+                           "epoch_cor.rds"))
 
-alluvialplot <- ggplot(ocean_dat,
-       aes(y = Count,
-           axis1 = Lower_Cretaceous, axis2 = Upper_Cretaceous, 
-           axis3 = Paleocene, axis4 = Eocene, axis5 = Oligocene, 
-           axis6 = Miocene, axis7 = Pliocene, 
-           axis8 = Pleistocene, axis9 = Holocene)) + 
-  geom_alluvium(aes(fill = Lower_Cretaceous),
-                width = 0.5, knot.pos = 0.2, reverse = FALSE, 
-                aes.bind = FALSE) +
-  scale_x_continuous(breaks = 1:9, labels = c("Lower \n Cretaceous", "Upper \n Cretaceous", 
-                                              "Paleocene", 'Eocene', 'Oligocene', 'Miocene',
-                                              'Pliocene', 'Pleistocene', 'Holocene')) +
-  geom_text(stat = "stratum", aes(label = after_stat(stratum)), 
-            reverse = FALSE, size = 5, color = "black") + 
-  theme(panel.background=element_blank(),
-        panel.border=element_blank(),
-        panel.grid.major=element_blank(),
-        panel.grid.minor=element_blank(), 
-        plot.background=element_blank(), 
-        axis.text.x = element_blank(), 
-        axis.ticks.x = element_blank(), 
-        axis.title.x = element_blank(), 
-        legend.position = "none"
-  ) + 
-  coord_flip() + 
-  scale_fill_manual(values = c(Arctic = "#deebf7", Atlantic = "#c6dbef", Pacific = "#9ecae1", 
-                               SAES = "#74a9cf", Tethys = "#4292c6", TS = "#2171b5", 
-                               WIS = "#08519c", WT = "#08306b"))
-
-alluvialplot
-
-
-alluvialplot2 <- ggplot(ocean_dat,
-                        aes(y = Count,
-                            axis1 = Lower_Cretaceous, axis2 = Upper_Cretaceous, 
-                            axis3 = Paleocene, axis4 = Eocene, axis5 = Oligocene, 
-                            axis6 = Miocene, axis7 = Pliocene, 
-                            axis8 = Pleistocene, axis9 = Holocene)) + 
-  geom_alluvium(aes(fill = Holocene),
-                width = 0.5, knot.pos = 0.2, reverse = FALSE, 
-                aes.bind = FALSE) +
-  scale_x_continuous(breaks = 1:9, labels = c("Lower \n Cretaceous", "Upper \n Cretaceous", 
-                                              "Paleocene", 'Eocene', 'Oligocene', 'Miocene',
-                                              'Pliocene', 'Pleistocene', 'Holocene')) +
-  geom_text(stat = "stratum", aes(label = after_stat(stratum)), 
-            reverse = FALSE, size = 5, color = "black") + 
-  theme(panel.background=element_blank(),
-        panel.border=element_blank(),
-        panel.grid.major=element_blank(),
-        panel.grid.minor=element_blank(), 
-        plot.background=element_blank(), 
-        axis.text.x = element_blank(), 
-        axis.ticks.x = element_blank(), 
-        axis.title.x = element_blank(), 
-        legend.position = "none"
-  ) + 
-  coord_flip() +
-  scale_fill_manual(values = c(Arctic = "#c6dbef", Atlantic = "#74a9cf", Pacific = "#4292c6", Southern = "#2171b5", 
-                              Indian = "#08519c", Mediterranean = "#08306b"))
-
-alluvialplot2
+dat_fins <- read_rds(here("data", "fins_filtered_species.rds"))
 
 
 
-ggsave(plot=alluvialplot2, filename="alluvialplot_V3.pdf", width=10, height=7)
+dat_ocean_clean <- dat_ocean %>%
+  select(-Count) %>% 
+  pivot_longer(cols = everything(), 
+               values_to = "basin", 
+               names_to = "epoch") %>% 
+  mutate(epoch = str_replace_all(epoch, "_", " ")) %>% 
+  left_join(dat_fins %>% 
+              group_by(paleoocean, epoch = early_epoch) %>% 
+              summarise(pal_lat = mean(latitude)) %>% 
+              ungroup() %>% 
+              select(basin = paleoocean, pal_lat, epoch) %>% 
+              distinct(epoch, basin, pal_lat)) %>% 
+  left_join(dat_fins %>% 
+              distinct(accepted_name, paleoocean, early_epoch) %>%
+              count(basin = paleoocean, epoch = early_epoch)) %>% 
+  left_join(epoch_cor %>% 
+              select(epoch = name, start_age = max_age) %>% 
+              mutate(epoch = str_replace_all(epoch, "Late", "Upper"), 
+                     epoch = str_replace_all(epoch, "Early", "Lower"))) %>% 
+  add_column(id = rep(1:11, each = 9)) %>%
+  left_join(tibble(basin = unique(dat_ocean_clean$basin), 
+                   basin_leg = c("Pacific", "WIS", 
+                                 "Atlantic", "WT", "Tethys", 
+                                 "Neo-Tethys", "TS", "SAES", 
+                                 "Arctic", "TSS", 
+                                 "Mediterranean", "Southern", "Indian"))) %>% 
+  mutate(epoch = str_replace_all(epoch, " ", "\n"), 
+         epoch = fct_reorder(epoch, start_age),
+         basin_leg = fct_reorder(basin_leg, desc(pal_lat), 
+                                 .na_rm = TRUE)) %>% 
+  replace_na(list(n = 1)) 
 
+# dat_ocean_clean %>% 
+#   write_csv(here("data", 
+#                  "ocean_basin_data.csv"))
+
+plot_ocean <- dat_ocean_clean %>%
+  ggplot(aes(x = epoch, stratum = basin_leg, log(1+n),
+             alluvium = id, fill = basin_leg, label = basin_leg)) +
+  geom_flow(aes(colour = basin_leg), 
+            stat = "alluvium", lode.guidance = "frontback", 
+            alpha = 1, 
+            width = 0) +
+    geom_label(aes(colour = basin_leg), 
+             stat = "stratum", size = 6/.pt, 
+             label.r = unit(0.5, "lines"),
+             label.size = 0, 
+             fill = "white") +
+  scale_fill_viridis_d() +
+  scale_colour_viridis_d() +
+  scale_x_discrete(limits = rev) +
+  theme_minimal() +
+  labs(x = NULL, y = "Occurrences") +
+  theme(axis.text.x = element_text(angle = 20, hjust = 0.5), 
+        axis.text.y = element_blank(),
+        panel.grid = element_blank(),
+        legend.position = "none")
+
+# save
+ggsave(plot_ocean, 
+       filename = here("figures",
+                       "fig_S1.pdf"), 
+       width = 183*1.5, height = 150,
+       units = "mm", 
+       bg = "white")

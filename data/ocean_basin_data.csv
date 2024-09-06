@@ -1,0 +1,59 @@
+epoch,basin,pal_lat,n,start_age
+Lower Cretaceous,Pacific,26.409707646352473,23,145
+Upper Cretaceous,Pacific,26.409707646352473,303,100.5
+Paleocene,Pacific,26.409707646352473,170,66
+Eocene,Pacific,26.409707646352473,179,56
+Oligocene,Pacific,26.409707646352473,117,33.9
+Miocene,Pacific,26.409707646352473,242,23.03
+Pliocene,Pacific,26.409707646352473,98,5.333
+Pleistocene,Pacific,26.409707646352473,65,2.58
+Holocene,Pacific,26.409707646352473,17,0.0117
+Lower Cretaceous,Western Interior Seaway,38.35933804166667,16,145
+Upper Cretaceous,Western Interior Seaway,38.35933804166667,26,100.5
+Paleocene,Atlantic,35.65060649006795,25,66
+Eocene,Atlantic,35.65060649006795,169,56
+Oligocene,Atlantic,35.65060649006795,21,33.9
+Miocene,Atlantic,35.65060649006795,109,23.03
+Pliocene,Atlantic,35.65060649006795,67,5.333
+Pleistocene,Atlantic,35.65060649006795,15,2.58
+Holocene,Atlantic,35.65060649006795,NA,0.0117
+Lower Cretaceous,Western Tethys,35.091584278582204,NA,145
+Upper Cretaceous,Western Tethys,35.091584278582204,163,100.5
+Paleocene,Tethys,41.359578896462715,117,66
+Eocene,Neo-Tethys,46.08716580027061,304,56
+Oligocene,Neo-Tethys,46.08716580027061,91,33.9
+Miocene,Neo-Tethys,46.08716580027061,144,23.03
+Lower Cretaceous,Tethys Seaway,50.11538267744575,117,145
+Upper Cretaceous,Tethys Seaway,50.11538267744575,249,100.5
+Lower Cretaceous,South American Epicontinental Seas,-17.87351494736842,1,145
+Upper Cretaceous,South American Epicontinental Seas,-17.87351494736842,7,100.5
+Lower Cretaceous,Atlantic,35.65060649006795,2,145
+Upper Cretaceous,Atlantic,35.65060649006795,11,100.5
+Lower Cretaceous,Arctic,57.618251465408804,NA,145
+Upper Cretaceous,Arctic,57.618251465408804,13,100.5
+Paleocene,Arctic,57.618251465408804,NA,66
+Eocene,Arctic,57.618251465408804,8,56
+Oligocene,Arctic,57.618251465408804,NA,33.9
+Miocene,Arctic,57.618251465408804,NA,23.03
+Pliocene,Arctic,57.618251465408804,NA,5.333
+Pleistocene,Arctic,57.618251465408804,NA,2.58
+Holocene,Arctic,57.618251465408804,NA,0.0117
+Lower Cretaceous,Tethys,41.359578896462715,6,145
+Upper Cretaceous,Trans-Saharan Seaway,27.019392489285714,62,100.5
+Pliocene,Mediterranean,44.43108206069617,78,5.333
+Pleistocene,Mediterranean,44.43108206069617,17,2.58
+Holocene,Mediterranean,44.43108206069617,NA,0.0117
+Paleocene,Southern,-63.149275809027785,5,66
+Eocene,Southern,-63.149275809027785,24,56
+Oligocene,Southern,-63.149275809027785,NA,33.9
+Miocene,Southern,-63.149275809027785,NA,23.03
+Pliocene,Southern,-63.149275809027785,NA,5.333
+Pleistocene,Southern,-63.149275809027785,NA,2.58
+Holocene,Southern,-63.149275809027785,NA,0.0117
+Upper Cretaceous,Tethys,41.359578896462715,73,100.5
+Eocene,Indian,10.290807345218353,22,56
+Oligocene,Indian,10.290807345218353,4,33.9
+Miocene,Indian,10.290807345218353,54,23.03
+Pliocene,Indian,10.290807345218353,2,5.333
+Pleistocene,Indian,10.290807345218353,1,2.58
+Holocene,Indian,10.290807345218353,NA,0.0117
