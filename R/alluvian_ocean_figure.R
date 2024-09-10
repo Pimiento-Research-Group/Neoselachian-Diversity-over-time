@@ -43,21 +43,19 @@ dat_ocean_clean <- dat_ocean %>%
               mutate(epoch = str_replace_all(epoch, "Late", "Upper"), 
                      epoch = str_replace_all(epoch, "Early", "Lower"))) %>% 
   add_column(id = rep(1:11, each = 9)) %>%
-  left_join(tibble(basin = unique(dat_ocean_clean$basin), 
+  left_join(tibble(basin = unique(.$basin), 
                    basin_leg = c("Pacific", "WIS", 
                                  "Atlantic", "WT", "Tethys", 
                                  "Neo-Tethys", "TS", "SAES", 
                                  "Arctic", "TSS", 
                                  "Mediterranean", "Southern", "Indian"))) %>% 
+  filter(epoch != "Holocene") %>% 
   mutate(epoch = str_replace_all(epoch, " ", "\n"), 
          epoch = fct_reorder(epoch, start_age),
          basin_leg = fct_reorder(basin_leg, desc(pal_lat), 
                                  .na_rm = TRUE)) %>% 
   replace_na(list(n = 1)) 
 
-# dat_ocean_clean %>% 
-#   write_csv(here("data", 
-#                  "ocean_basin_data.csv"))
 
 plot_ocean <- dat_ocean_clean %>%
   ggplot(aes(x = epoch, stratum = basin_leg, log(1+n),
@@ -66,20 +64,34 @@ plot_ocean <- dat_ocean_clean %>%
             stat = "alluvium", lode.guidance = "frontback", 
             alpha = 1, 
             width = 0) +
-    geom_label(aes(colour = basin_leg), 
-             stat = "stratum", size = 6/.pt, 
+  geom_label(aes(colour = basin_leg),
+             stat = "stratum",  
              label.r = unit(0.5, "lines"),
              label.size = 0, 
-             fill = "white") +
-  scale_fill_viridis_d() +
-  scale_colour_viridis_d() +
+             size = 6/.pt,
+             fill = "white", 
+             show.legend = FALSE) +
+  scale_size_identity(guide = "legend") +
+  scale_fill_viridis_d(labels = dat_ocean_clean %>%
+                         mutate(basin = fct_reorder(basin,
+                                                    desc(pal_lat),
+                                                    .na_rm = TRUE)) %>%
+                         distinct(basin) %>%
+                         arrange(basin) %>%
+                         pull(basin)) +
+  scale_colour_viridis_d(guide = 'none') +
   scale_x_discrete(limits = rev) +
   theme_minimal() +
-  labs(x = NULL, y = "Occurrences") +
+  guides(fill = guide_legend(ncol = 4, byrow = TRUE)) +
+  labs(x = NULL, y = "Occurrences",
+       fill = NULL, colour = NULL) +
   theme(axis.text.x = element_text(angle = 20, hjust = 0.5), 
         axis.text.y = element_blank(),
         panel.grid = element_blank(),
-        legend.position = "none")
+        # legend.position = c(0.85, 0.9),
+        legend.position = "bottom",
+        legend.key.size = unit(3, "mm"), 
+        legend.text = element_text(size = 7))
 
 # save
 ggsave(plot_ocean, 
