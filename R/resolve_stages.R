@@ -33,7 +33,9 @@ epoch_cor <- epochs %>%
   mutate(abbr = str_replace_all(abbr, "LC", "UC"), 
          abbr = str_replace_all(abbr, "EC", "LC"), 
          name = str_replace_all(name, "Late Cretaceous", "Upper Cretaceous"), 
-         name = str_replace_all(name, "Early Cretaceous", "Lower Cretaceous"))
+         name = str_replace_all(name, "Early Cretaceous", "Lower Cretaceous"), 
+         name = str_replace_all(name, "Pliocene", "Pli"), 
+         name = str_replace_all(name, "Pleistocene", "Ple"))
 
 
 # set up stages for plotting
