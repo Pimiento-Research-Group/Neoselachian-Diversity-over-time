@@ -31,7 +31,9 @@ epoch_cor <- epochs %>%
                    "#BAD25F", 
                    "#A0C96D")) %>% 
   mutate(abbr = str_replace_all(abbr, "LC", "UC"), 
-         abbr = str_replace_all(abbr, "EC", "LC"))
+         abbr = str_replace_all(abbr, "EC", "LC"), 
+         name = str_replace_all(name, "Late Cretaceous", "Upper Cretaceous"), 
+         name = str_replace_all(name, "Early Cretaceous", "Lower Cretaceous"))
 
 
 # set up stages for plotting
@@ -41,11 +43,15 @@ stage_cor <- stages %>%
   as_tibble() %>% 
   filter(!name  %in% c("Meghalayan", "Northgrippian", "Greenlandian", 
                        "Late Pleistocene", "Chibanian", "Calabrian",
-                       "Piacenzian", "Zanclean", "Gelasian", "Aptian")) %>% 
+                       "Piacenzian", "Zanclean", "Gelasian", "Aptian",
+                       "Barremian")) %>% 
   add_row(epoch_cor %>% 
             filter(name %in% c("Pleistocene", "Pliocene"))) %>% 
-  add_row(tibble(name = "Aptian", max_age = 125, min_age = 113, 
-                 abbr = "Ap", color = "#BFE48A")) %>% 
+  add_row(tibble(name = c("Aptian", "Barremian"),
+                 max_age = c(125, 129.400), 
+                 min_age = c(113, 125), 
+                 abbr = c("Ap", "Brrm"), 
+                 color = c("#BFE48A", "#B3DF7F"))) %>% 
   arrange(max_age)
 
 
