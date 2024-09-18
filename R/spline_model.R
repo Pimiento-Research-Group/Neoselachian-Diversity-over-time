@@ -25,35 +25,64 @@ dat_sqs <- read_rds(here("data",
 # fit a spline model ------------------------------------------------------
 
 # and predict 
-dat_pred <- dat_pyrate_species %>%
+dat_mean <- dat_pyrate_species %>%
   spline(x = .$start_age,
          y = .$diversity, 
          ties = "mean",
          xout = unique(dat_sqs$start_age),
          method = "natural") %>% 
   pluck("y") %>% 
-  as_tibble_col(column_name = "diversity") %>% 
+  as_tibble_col(column_name = "mean_div") %>% 
   add_column(start_age = unique(dat_sqs$start_age),
               .before = 1)
 
-  
-# visualise
-dat_pred %>% 
-  ggplot(aes(start_age, diversity)) +
-  geom_point()+
-  geom_point(data = dat_pyrate_species %>% 
-              group_by(start_age) %>% 
-              summarise(diversity = median(diversity)), 
-            colour = "red") +
-  geom_line(data = dat_pyrate_species %>% 
-              group_by(start_age) %>% 
-              summarise(diversity = median(diversity)), 
-            colour = "red")
+# and predict 
+dat_min <- dat_pyrate_species %>%
+  spline(x = .$start_age,
+         y = .$diversity, 
+         ties = "min",
+         xout = unique(dat_sqs$start_age),
+         method = "natural") %>% 
+  pluck("y") %>% 
+  as_tibble_col(column_name = "min_div") %>% 
+  add_column(start_age = unique(dat_sqs$start_age),
+             .before = 1)
 
+# and predict 
+dat_max <- dat_pyrate_species %>%
+  spline(x = .$start_age,
+         y = .$diversity, 
+         ties = "max",
+         xout = unique(dat_sqs$start_age),
+         method = "natural") %>% 
+  pluck("y") %>% 
+  as_tibble_col(column_name = "max_div") %>% 
+  add_column(start_age = unique(dat_sqs$start_age),
+             .before = 1)
+  
+# combine
+dat_full <- dat_mean %>% 
+  full_join(dat_min) %>% 
+  full_join(dat_max) %>%
+  mutate(min_div = if_else(min_div < 0, 0, min_div)) 
+  
+
+# visualise
+dat_full %>% 
+  ggplot(aes(start_age)) +
+  geom_point(aes(y = diversity), 
+             data = dat_pyrate_species) +
+  geom_point(aes(y = min_div), 
+             colour = "coral") +
+  geom_point(aes(y = mean_div), 
+            colour = "steelblue") +
+  geom_point(aes(y = max_div), 
+             colour = "firebrick") 
+  
 # save 
-dat_pred %>% 
+dat_full %>% 
   write_rds(here("data", 
-               "dat_pyrate_species_binned.rds"))
+               "pyrate_species_binned.rds"))
 
 
 # set up function ---------------------------------------------------------
