@@ -64,6 +64,9 @@ plot_div <- function(data_set,
               ymax = max(DeepDive, na.rm = TRUE)) %>% 
     mutate(start_age = as.double(start_age)) %>% 
     ggplot(aes(start_age, y)) +
+    geom_hline(yintercept = 0, 
+               linewidth = 0.1, 
+               colour = "white") +
     geom_vline(xintercept = epoch_age,
                colour = "grey95", 
                linewidth = 0.4) +
@@ -103,7 +106,7 @@ plot_div <- function(data_set,
                 pos = "b",
                 alpha = 0,
                 lab_color = "white",
-                color = "white",
+                color = NA,
                 abbrv = TRUE,
                 fill = "white",
                 expand = FALSE)} +

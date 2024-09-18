@@ -77,6 +77,7 @@ stage_cor <- read_rds(here("data",
                            "stage_cor.rds")) %>% 
   select(stage = name, start_age = max_age)
 
+
 # combine in one dataframe ------------------------------------------------
 
 dat_neo_species %>% 
@@ -149,7 +150,6 @@ dat_neo_genus %>%
   bind_rows(dat_ord_genus) %>% 
   filter(start_age > 0) %>% 
   left_join(stage_cor) %>% 
-  group_by(taxon) %>% 
   write_xlsx(here("data", "taxa_per_stage_genus.xlsx"))
 
 
@@ -190,3 +190,11 @@ dat_perc <- dat_deep_species %>%
 # save as excel table
 dat_perc %>% 
   write_xlsx(here("data", "table_1.xlsx"))
+
+
+
+# same for pyrate ---------------------------------------------------------
+
+dat_pyrate <- read_rds(here("data", "pyrate_species_binned.rds"))
+
+  
