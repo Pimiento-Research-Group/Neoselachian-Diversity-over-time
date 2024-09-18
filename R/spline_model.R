@@ -22,6 +22,39 @@ dat_sqs <- read_rds(here("data",
                          "diversity_continuous_sqs.rds")) %>% 
   select(start_age, diversity = speciesRT) 
 
+# fit a spline model ------------------------------------------------------
+
+# and predict 
+dat_pred <- dat_pyrate_species %>%
+  spline(x = .$start_age,
+         y = .$diversity, 
+         ties = "mean",
+         xout = unique(dat_sqs$start_age),
+         method = "natural") %>% 
+  pluck("y") %>% 
+  as_tibble_col(column_name = "diversity") %>% 
+  add_column(start_age = unique(dat_sqs$start_age),
+              .before = 1)
+
+  
+# visualise
+dat_pred %>% 
+  ggplot(aes(start_age, diversity)) +
+  geom_point()+
+  geom_point(data = dat_pyrate_species %>% 
+              group_by(start_age) %>% 
+              summarise(diversity = median(diversity)), 
+            colour = "red") +
+  geom_line(data = dat_pyrate_species %>% 
+              group_by(start_age) %>% 
+              summarise(diversity = median(diversity)), 
+            colour = "red")
+
+# save 
+dat_pred %>% 
+  write_rds(here("data", 
+               "dat_pyrate_species_binned.rds"))
+
 
 # set up function ---------------------------------------------------------
 
@@ -37,6 +70,7 @@ get_perc_change <- function(data_set, start_age_vec) {
     mutate(perc_change = ((pick(1) - pick(2))/pick(2))*100)
   
 }
+
 
 
 # apply -------------------------------------------------------------------
@@ -57,16 +91,5 @@ get_perc_change(dat_pyrate_species, c(83.679, 74.122))
 # campanian-maastrichtian deepdive
 get_perc_change(dat_pyrate_species, c(83.679, 61.258))
 
-# fit a spline model ------------------------------------------------------
 
-# and predict 
-dat_pred <- dat_pyrate_species %>%
-  spline(x = .$start_age,
-         y = .$diversity, 
-         ties = min, 
-         xout = c(83.6, 72.1),
-         method = "natural") %>% 
-  pluck("y")
-  
-((dat_pred[2] - dat_pred[1])/dat_pred[1])*100
   
