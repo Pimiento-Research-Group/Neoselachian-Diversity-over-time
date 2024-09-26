@@ -53,6 +53,18 @@ dat_raw_genus <- read_rds(here("data",
                                "diversity_continuous_raw.rds")) %>% 
   select(start_age, diversity = speciesRT) 
 
+# stage data
+epoch_age <- read_rds(here("data", 
+                           "epoch_age.rds"))
+
+epoch_cor <- read_rds(here("data",
+                           "epoch_cor.rds"))
+
+stage_cor <- read_rds(here("data", 
+                           "stage_cor.rds")) %>% 
+  select(stage = name, start_age = max_age)
+
+
 # set up spline function --------------------------------------------------
 
 div_per_stage <- function(data_set) {
@@ -97,7 +109,9 @@ div_per_stage <- function(data_set) {
   dat_full <- dat_mean %>% 
     full_join(dat_min) %>% 
     full_join(dat_max) %>%
-    mutate(min_div = if_else(min_div < 0, 0, min_div)) 
+    mutate(min_div = if_else(min_div < 0, 0, min_div)) %>% 
+    left_join(stage_cor) %>% 
+    filter(start_age > 0)
   
   return(dat_full)
   
@@ -139,7 +153,9 @@ sum_per_stage <- function(data_set) {
   group_by(start_age) %>% 
   summarise(mean_div = mean(diversity), 
             min_div = min(diversity), 
-            max_div = max(diversity))
+            max_div = max(diversity)) %>% 
+  filter(start_age > 0) %>% 
+  left_join(stage_cor)
   }
 
 # raw species
