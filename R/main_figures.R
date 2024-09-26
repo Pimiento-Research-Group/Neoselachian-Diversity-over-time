@@ -184,10 +184,15 @@ list_order <- list.files(path = here("data", "deepdive_order_species"),
                             full.names = TRUE) %>% 
   map(function(.x) {
     dat <- read_csv(.x, show_col_types = FALSE) 
-    colnames(dat) <- rev(c(145, 139.800,  132.600, 129.400, 125, 113.000, 100.500, 93.900, 
-                       89.800, 86.300, 83.600, 72.100, 66.000, 61.600, 59.200, 56.000, 
-                       47.800, 41.200, 37.710, 33.900, 27.820, 23.030, 20.440, 15.970, 
-                       13.820, 11.630, 7.246, 5.333, 2.580, 0))
+    if(!"145.0" %in% colnames(dat)){
+      dat <- add_column(dat, "145.0" = 0)
+    }
+    if("139.0" %in% colnames(dat)){
+      dat <- select(dat, -"139.0")
+    }
+    if("132.0" %in% colnames(dat)){
+      dat <- select(dat, -"132.0")
+    }
     return(dat)
   }) %>% 
   bind_rows() %>% 
@@ -311,10 +316,15 @@ list_order <- list.files(path = here("data", "deepdive_order_genus"),
                          full.names = TRUE) %>% 
   map(function(.x) {
     dat <- read_csv(.x, show_col_types = FALSE) 
-    colnames(dat) <- rev(c(145, 139.800,  132.600, 129.400, 125, 113.000, 100.500, 93.900, 
-                           89.800, 86.300, 83.600, 72.100, 66.000, 61.600, 59.200, 56.000, 
-                           47.800, 41.200, 37.710, 33.900, 27.820, 23.030, 20.440, 15.970, 
-                           13.820, 11.630, 7.246, 5.333, 2.580, 0))
+    if(!"145.0" %in% colnames(dat)){
+      dat <- add_column(dat, "145.0" = 0)
+    }
+    if("139.0" %in% colnames(dat)){
+      dat <- select(dat, -"139.0")
+    }
+    if("132.0" %in% colnames(dat)){
+      dat <- select(dat, -"132.0")
+    }
     return(dat)
   }) %>% 
   bind_rows() %>% 

@@ -37,16 +37,21 @@ dat_sel_species <- get_data("deepdive_species", "selachii")
 
 # per order
 dat_ord_species <- list.files(path = here("data", "deepdive_order_species"),
-           recursive = TRUE,
-           pattern = "\\.csv$",
-           full.names = TRUE) %>% 
+                              recursive = TRUE,
+                              pattern = "\\.csv$",
+                              full.names = TRUE) %>% 
+  map(~read_csv(.x, show_col_types = FALSE))  %>% 
   map(function(.x) {
-    dat <- read_csv(.x, show_col_types = FALSE) 
-    colnames(dat) <- rev(c(145, 139.800,  132.600, 129.400, 125, 113.000, 100.500, 93.900, 
-                           89.800, 86.300, 83.600, 72.100, 66.000, 61.600, 59.200, 56.000, 
-                           47.800, 41.200, 37.710, 33.900, 27.820, 23.030, 20.440, 15.970, 
-                           13.820, 11.630, 7.246, 5.333, 2.580, 0))
-    return(dat)
+    if(!"145.0" %in% colnames(.x)){
+      .x <- add_column(.x, "145.0" = 0)
+    }
+    if("139.0" %in% colnames(.x)){
+      .x <- select(.x, -"139.0")
+    }
+    if("132.0" %in% colnames(.x)){
+      .x <- select(.x, -"132.0")
+    }
+    return(.x)
   }) %>% 
   bind_rows() %>% 
   mutate(taxon = rep(list.files(path = here("data", "deepdive_order_species"),
@@ -111,13 +116,18 @@ dat_ord_genus <- list.files(path = here("data", "deepdive_order_genus"),
                               recursive = TRUE,
                               pattern = "\\.csv$",
                               full.names = TRUE) %>% 
+  map(~read_csv(.x, show_col_types = FALSE))  %>% 
   map(function(.x) {
-    dat <- read_csv(.x, show_col_types = FALSE) 
-    colnames(dat) <- rev(c(145, 139.800,  132.600, 129.400, 125, 113.000, 100.500, 93.900, 
-                           89.800, 86.300, 83.600, 72.100, 66.000, 61.600, 59.200, 56.000, 
-                           47.800, 41.200, 37.710, 33.900, 27.820, 23.030, 20.440, 15.970, 
-                           13.820, 11.630, 7.246, 5.333, 2.580, 0))
-    return(dat)
+    if(!"145.0" %in% colnames(.x)){
+      .x <- add_column(.x, "145.0" = 0)
+    }
+    if("139.0" %in% colnames(.x)){
+      .x <- select(.x, -"139.0")
+    }
+    if("132.0" %in% colnames(.x)){
+      .x <- select(.x, -"132.0")
+    }
+    return(.x)
   }) %>% 
   bind_rows() %>% 
   mutate(taxon = rep(list.files(path = here("data", "deepdive_order_genus"),
@@ -153,48 +163,48 @@ dat_neo_genus %>%
   write_xlsx(here("data", "taxa_per_stage_genus.xlsx"))
 
 
-# calculate percentage change ---------------------------------------------
-
-# neoselachii
-dat_perc <- dat_deep_species %>% 
-  pivot_wider(names_from = start_age, 
-              values_from = mean_div) %>% 
-  add_column(type = "Neoselachii") %>% 
-  bind_rows(# selachii
-    dat_sel_species %>% 
-      pivot_wider(names_from = start_age, 
-                  values_from = mean_div) %>% 
-      add_column(`145` = 1, 
-                 type = "Selachii")) %>% 
-  bind_rows(# batiodea
-    dat_bat_species %>% 
-              pivot_wider(names_from = start_age, 
-                          values_from = mean_div) %>% 
-            add_column(type = "Batoidea")) %>% 
-  mutate(cret_rise = ((`83.6` - `145`) / `145`)*100, # Berriasian - Campanian
-            cret_paleo_desc = ((`61.6` - `83.6`) / `83.6`)*100, # Campanian - Selandian
-            KPg = ((`61.6` - `72.1`) / `72.1`)*100, # Maastrichtian - Danian
-            pal_eo = ((`47.8` - `61.6`) / `61.6`)*100, # Selandian - Lutetian
-            eo_rec = ((`0` - `47.8`) / `47.8`)*100) %>% # Lutetian - Recent
-  select(cret_rise, cret_paleo_desc, KPg, pal_eo, eo_rec, type) %>% 
-  pivot_longer(-type, names_to = "Phase") %>% 
-  pivot_wider(values_from = value, 
-              names_from = type) %>% 
-  add_column(Start = c(145, 83.6, 72.1, 61.6, 47.8),
-             End = c(83.6, 61.6, 61.6, 47.8, 0),
-             .after = "Phase") %>% 
-  mutate(across(c("Neoselachii", "Selachii", "Batoidea"), 
-                ~ round(.x, 0)))
-
-
-# save as excel table
-dat_perc %>% 
-  write_xlsx(here("data", "table_1.xlsx"))
-
-
-
-# same for pyrate ---------------------------------------------------------
-
-dat_pyrate <- read_rds(here("data", "pyrate_species_binned.rds"))
-
-  
+# # calculate percentage change ---------------------------------------------
+# 
+# # neoselachii
+# dat_perc <- dat_deep_species %>% 
+#   pivot_wider(names_from = start_age, 
+#               values_from = mean_div) %>% 
+#   add_column(type = "Neoselachii") %>% 
+#   bind_rows(# selachii
+#     dat_sel_species %>% 
+#       pivot_wider(names_from = start_age, 
+#                   values_from = mean_div) %>% 
+#       add_column(`145` = 1, 
+#                  type = "Selachii")) %>% 
+#   bind_rows(# batiodea
+#     dat_bat_species %>% 
+#               pivot_wider(names_from = start_age, 
+#                           values_from = mean_div) %>% 
+#             add_column(type = "Batoidea")) %>% 
+#   mutate(cret_rise = ((`83.6` - `145`) / `145`)*100, # Berriasian - Campanian
+#             cret_paleo_desc = ((`61.6` - `83.6`) / `83.6`)*100, # Campanian - Selandian
+#             KPg = ((`61.6` - `72.1`) / `72.1`)*100, # Maastrichtian - Danian
+#             pal_eo = ((`47.8` - `61.6`) / `61.6`)*100, # Selandian - Lutetian
+#             eo_rec = ((`0` - `47.8`) / `47.8`)*100) %>% # Lutetian - Recent
+#   select(cret_rise, cret_paleo_desc, KPg, pal_eo, eo_rec, type) %>% 
+#   pivot_longer(-type, names_to = "Phase") %>% 
+#   pivot_wider(values_from = value, 
+#               names_from = type) %>% 
+#   add_column(Start = c(145, 83.6, 72.1, 61.6, 47.8),
+#              End = c(83.6, 61.6, 61.6, 47.8, 0),
+#              .after = "Phase") %>% 
+#   mutate(across(c("Neoselachii", "Selachii", "Batoidea"), 
+#                 ~ round(.x, 0)))
+# 
+# 
+# # save as excel table
+# dat_perc %>% 
+#   write_xlsx(here("data", "table_1.xlsx"))
+# 
+# 
+# 
+# # same for pyrate ---------------------------------------------------------
+# 
+# dat_pyrate <- read_rds(here("data", "pyrate_species_binned.rds"))
+# 
+#   
