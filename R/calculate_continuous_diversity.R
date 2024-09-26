@@ -76,7 +76,7 @@ get_div <- function(data_set, tax_level, div_metric) {
                   iter = 100, q = 0.3, type = "sqs", 
                   ref = "reference_no",
                   singleton = "ref") %>% 
-        add_column(start_age = rev(bins[-27])) %>% 
+        add_column(start_age = rev(bins[-30])) %>% 
         filter(between(start_age, 0, 150)) %>% 
         select(stg, start_age,
                divRT, divBC, divSIB) %>% 
