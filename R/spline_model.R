@@ -152,7 +152,7 @@ sum_per_stage(dat_raw_genus)%>%
 
 # sqs species
 sum_per_stage(dat_sqs)%>% 
-  write_xlsx(here("data", "taxa_per_stage_raw_sqs.xlsx"))
+  write_xlsx(here("data", "taxa_per_stage_species_sqs.xlsx"))
 
 # sqs genus
 sum_per_stage(dat_sqs_genus)%>% 
