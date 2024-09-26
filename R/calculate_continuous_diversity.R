@@ -52,7 +52,7 @@ get_div <- function(data_set, tax_level, div_metric) {
                          labels = FALSE)) %>% 
         divDyn(., bin = "stg", tax = "accepted_name") %>% 
         as_tibble() %>% 
-        add_column(start_age = rev(bins[-27])) %>% 
+        add_column(start_age = rev(bins[-30])) %>% 
         filter(between(start_age, 0, 150)) %>% 
         select(stg, start_age,
                divRT, divBC, divSIB) %>% 
