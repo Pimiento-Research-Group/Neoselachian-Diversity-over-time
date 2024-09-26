@@ -117,15 +117,29 @@ div_per_stage(dat_pyrate_genus) %>%
   # save 
   write_xlsx(here("data", "taxa_per_stage_genus_pyrate.xlsx"))
 
+# double check
+div_per_stage(dat_pyrate_species) %>% 
+  ggplot(aes(start_age)) +
+  geom_ribbon(aes(ymin = min_div, 
+                  ymax = max_div), 
+              alpha = 0.2) +
+  geom_point(aes(y = mean_div)) +
+  geom_line(aes(y = mean_div), 
+            data = dat_pyrate_species %>% 
+              group_by(start_age) %>% 
+              summarise(mean_div = mean(diversity)), 
+            colour = "coral2") +
+  scale_x_reverse() +
+  theme_minimal()
 
 # set up summary function -------------------------------------------------
 
 sum_per_stage <- function(data_set) {
   data_set %>% 
   group_by(start_age) %>% 
-  summarise(mean_dif = mean(diversity), 
-            min_dif = min(diversity), 
-            max_dif = max(diversity))
+  summarise(mean_div = mean(diversity), 
+            min_div = min(diversity), 
+            max_div = max(diversity))
   }
 
 # raw species
