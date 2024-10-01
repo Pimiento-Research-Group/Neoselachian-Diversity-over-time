@@ -3,70 +3,38 @@ library(here)
 library(patchwork)
 library(deeptime)
 library(pammtools)
+library(readxl)
 
 
 # read data ---------------------------------------------------------------
 
-# raw dat
-dat_raw <- read_rds(here("data",
-                          "diversity_continuous_raw.rds"))
+# species data
+dat_spec <- read_xlsx(here("data", 
+                           "taxa_per_stage_per_metric_species.xlsx"))
 
-# subsampled data
-dat_sqs <- read_rds(here("data",
-                         "diversity_continuous_sqs.rds"))
-
-# deepdive predictions
-dat_deep_species <- read_csv(here("data",
-                                "deepdive_species",
-                                "all_64.csv")) %>% 
+# deepdive species
+dat_deep_spec <- read_csv(here("data",
+                                 "deepdive_species",
+                                 "all_64.csv")) %>% 
+  add_column(model = "64") %>% 
   bind_rows(read_csv(here("data",
                           "deepdive_species",
-                          "all_128.csv"))) %>% 
-  rowid_to_column("run") %>% 
-  pivot_longer(cols = -run, 
-               names_to = "start_age", 
-               values_to = "DeepDive") %>% 
-  mutate(start_age = as.double(start_age))
+                          "all_128.csv")) %>% 
+              add_column(model = "128"))
 
-dat_deep_genus <- read_csv(here("data",
-                                  "deepdive_genus",
-                                  "all_64.csv")) %>% 
+# genus data
+dat_gen <- read_xlsx(here("data", 
+                           "taxa_per_stage_per_metric_genus.xlsx"))
+
+# deepdive genus
+dat_deep_gen <- read_csv(here("data",
+                               "deepdive_genus",
+                               "all_64.csv")) %>% 
+  add_column(model = "64") %>% 
   bind_rows(read_csv(here("data",
                           "deepdive_genus",
-                          "all_128.csv"))) %>% 
-  rowid_to_column("run") %>% 
-  pivot_longer(cols = -run, 
-               names_to = "start_age", 
-               values_to = "DeepDive") %>% 
-  mutate(start_age = as.double(start_age))
-
-# pyrate data
-dat_pyrate_genus <- read_delim(here("data", 
-                                    "all_genus_PyRate_mcmcdiv.log")) %>% 
-  select(it, contains("t_")) %>% 
-  pivot_longer(-it, 
-               names_to = "start_age", 
-               values_to = "diversity") %>% 
-  mutate(start_age = str_remove_all(start_age, "t_"), 
-         start_age = as.double(start_age)) %>% 
-  rename(run = it) %>% 
-  filter(run != 0) %>% 
-  mutate(run = run/500) %>% 
-  add_column(metric = "PyRate")
-
-dat_pyrate_species <- read_delim(here("data", 
-                                    "all_species_input_PyRate_mcmcdiv.log")) %>% 
-  select(it, contains("t_")) %>% 
-  pivot_longer(-it, 
-               names_to = "start_age", 
-               values_to = "diversity") %>% 
-  mutate(start_age = str_remove_all(start_age, "t_"), 
-         start_age = as.double(start_age)) %>% 
-  rename(run = it) %>% 
-  filter(run != 0) %>% 
-  mutate(run = run/500) %>% 
-  add_column(metric = "PyRate")
-
+                          "all_128.csv")) %>% 
+              add_column(model = "128"))
 
 # stage data
 epoch_age <- read_rds(here("data", 
@@ -82,56 +50,48 @@ stage_cor <- read_rds(here("data",
 
 # species level -----------------------------------------------------------
 
-# join data
-dat_species <- dat_raw %>%
-  select(stg, start_age, run, Raw = speciesRT) %>% 
-  full_join(dat_sqs %>% 
-              select(stg, start_age, run, SQS = speciesRT)) %>% 
-  left_join(dat_deep_species) %>% 
-  pivot_longer(cols = c(Raw, SQS, DeepDive), 
-               names_to = "metric", 
+# merge data
+dat_spec_full <- dat_deep_spec %>%
+  pivot_longer(cols = -model, 
+               names_to = "start_age", 
                values_to = "diversity") %>% 
-  replace_na(list(diversity = 0)) %>% 
-  group_by(start_age, metric) %>% 
-  summarise(ymin = min(diversity, na.rm = TRUE), 
-            y = mean(diversity, na.rm = TRUE), 
-            ymax = max(diversity, na.rm = TRUE)) %>% 
+  mutate(start_age = as.double(start_age)) %>% 
+  group_by(start_age) %>% 
+  summarise(mean_div = mean(diversity), 
+            min_div = min(diversity), 
+            max_div = max(diversity)) %>% 
+  filter(start_age > 0) %>% 
+  left_join(stage_cor %>% 
+              select(stage = name, start_age = max_age)) %>% 
+  add_column(metric = "DeepDive") %>% 
+  bind_rows(dat_spec %>% 
+              mutate(metric = str_to_sentence(metric), 
+                     metric = str_replace_all(metric, 
+                                              "Pyrate", 
+                                              "PyRate"), 
+                     metric = str_replace_all(metric, 
+                                              "Sqs", 
+                                              "SQS"))) %>% 
   mutate(metric = ordered(metric, 
                           levels = c("Raw", 
                                      "SQS", 
-                                     "DeepDive")))
-
+                                     "PyRate",
+                                     "DeepDive"))) 
 
 # visualise
-plot_spec_abs <- dat_species %>%
-  ggplot(aes(start_age, y,
+plot_spec_abs <- dat_spec_full %>%
+  ggplot(aes(start_age, mean_div,
              colour = metric)) +
   geom_vline(xintercept = epoch_age,
              colour = "grey95",
              linewidth = 0.4) +
-  geom_stepribbon(aes(ymin = ymin, 
-                      ymax = ymax), 
+  geom_stepribbon(aes(ymin = min_div, 
+                      ymax = max_div), 
                   alpha = 0.3, 
                   colour = "grey80", 
                   linewidth = 0.001, 
                   fill = "grey20") +
   geom_step(linewidth = 0.3, 
-            colour = "grey20") +
-  geom_stepribbon(aes(ymin = ymin, 
-                      ymax = ymax), 
-                  data = dat_pyrate_species %>%
-                    group_by(start_age, metric) %>% 
-                    summarise(ymin = min(diversity, na.rm = TRUE), 
-                              y = mean(diversity),
-                              ymax = max(diversity, na.rm = TRUE)), 
-                  alpha = 0.3, 
-                  colour = "grey80", 
-                  linewidth = 0.001, 
-                  fill = "grey20") +
-  geom_step(data = dat_pyrate_species %>% 
-              group_by(start_age, metric) %>%
-              summarise(y = mean(diversity)), 
-            linewidth = 0.3, 
             colour = "grey20") +
   labs(y = "Species Diversity",
        x = "Time (Ma)",
@@ -150,9 +110,8 @@ plot_spec_abs <- dat_species %>%
             size = list(6/.pt, 6/.pt, 6/.pt),
             lab_color = "grey20",
             color = "grey20",
-            abbrv = list(TRUE, TRUE, FALSE),
+            abbrv = list(TRUE, FALSE, FALSE),
             rot = list(90, 0, 0),
-            # fill = "white",
             expand = FALSE,
             lwd = list(0.1, 0.1, 0.1)) +
   theme_minimal() +
@@ -160,11 +119,7 @@ plot_spec_abs <- dat_species %>%
         axis.ticks = element_line(colour = "grey50"),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank()) +
-  facet_wrap(~ordered(metric, 
-                      levels = c("Raw", 
-                                 "SQS", 
-                                 "PyRate",
-                                 "DeepDive")), 
+  facet_wrap(~metric, 
              scales = "free_y", 
              nrow = 4, 
              strip.position = "right")
@@ -182,57 +137,50 @@ ggsave(plot_spec_abs,
 # genus level -----------------------------------------------------------
 
 # join data
-dat_genus <- dat_raw %>%
-  select(stg, start_age, run, Raw = genusRT) %>% 
-  full_join(dat_sqs %>% 
-              select(stg, start_age, run, SQS = genusRT)) %>% 
-  left_join(dat_deep_genus) %>% 
-  pivot_longer(cols = c(Raw, SQS, DeepDive), 
-               names_to = "metric", 
+# merge data
+dat_gen_full <- dat_deep_gen %>%
+  pivot_longer(cols = -model, 
+               names_to = "start_age", 
                values_to = "diversity") %>% 
-  replace_na(list(diversity = 0)) %>% 
-  group_by(start_age, metric) %>% 
-  summarise(ymin = min(diversity, na.rm = TRUE), 
-            y = mean(diversity, na.rm = TRUE), 
-            ymax = max(diversity, na.rm = TRUE)) %>% 
+  mutate(start_age = as.double(start_age)) %>% 
+  group_by(start_age) %>% 
+  summarise(mean_div = mean(diversity), 
+            min_div = min(diversity), 
+            max_div = max(diversity)) %>% 
+  filter(start_age > 0) %>% 
+  left_join(stage_cor %>% 
+              select(stage = name, start_age = max_age)) %>% 
+  add_column(metric = "DeepDive") %>% 
+  bind_rows(dat_gen %>% 
+              mutate(metric = str_to_sentence(metric), 
+                     metric = str_replace_all(metric, 
+                                              "Pyrate", 
+                                              "PyRate"), 
+                     metric = str_replace_all(metric, 
+                                              "Sqs", 
+                                              "SQS"))) %>% 
   mutate(metric = ordered(metric, 
                           levels = c("Raw", 
                                      "SQS", 
-                                     "DeepDive")))
-
+                                     "PyRate",
+                                     "DeepDive"))) 
 
 # visualise
-plot_spec_abs <- dat_genus %>%
-  ggplot(aes(start_age, y,
+plot_gen_abs <- dat_gen_full %>%
+  ggplot(aes(start_age, mean_div,
              colour = metric)) +
   geom_vline(xintercept = epoch_age,
              colour = "grey95",
              linewidth = 0.4) +
-  geom_stepribbon(aes(ymin = ymin, 
-                      ymax = ymax), 
+  geom_stepribbon(aes(ymin = min_div, 
+                      ymax = max_div), 
                   alpha = 0.3, 
                   colour = "grey80", 
                   linewidth = 0.001, 
                   fill = "grey20") +
   geom_step(linewidth = 0.3, 
             colour = "grey20") +
-  geom_stepribbon(aes(ymin = ymin, 
-                      ymax = ymax), 
-                  data = dat_pyrate_genus %>%
-                    group_by(start_age, metric) %>% 
-                    summarise(ymin = min(diversity, na.rm = TRUE), 
-                              y = mean(diversity),
-                              ymax = max(diversity, na.rm = TRUE)), 
-                  alpha = 0.3, 
-                  colour = "grey80", 
-                  linewidth = 0.001, 
-                  fill = "grey20") +
-  geom_step(data = dat_pyrate_genus %>% 
-              group_by(start_age, metric) %>%
-              summarise(y = mean(diversity)), 
-            linewidth = 0.3, 
-            colour = "grey20") +
-  labs(y = "Genus Diversity",
+  labs(y = "Species Diversity",
        x = "Time (Ma)",
        colour = NULL) +
   scale_x_reverse(breaks = seq(140, 0, by = -20), 
@@ -249,9 +197,8 @@ plot_spec_abs <- dat_genus %>%
             size = list(6/.pt, 6/.pt, 6/.pt),
             lab_color = "grey20",
             color = "grey20",
-            abbrv = list(TRUE, TRUE, FALSE),
+            abbrv = list(TRUE, FALSE, FALSE),
             rot = list(90, 0, 0),
-            # fill = "white",
             expand = FALSE,
             lwd = list(0.1, 0.1, 0.1)) +
   theme_minimal() +
@@ -259,18 +206,13 @@ plot_spec_abs <- dat_genus %>%
         axis.ticks = element_line(colour = "grey50"),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank()) +
-  facet_wrap(~ordered(metric, 
-                      levels = c("Raw", 
-                                 "SQS", 
-                                 "PyRate",
-                                 "DeepDive")), 
+  facet_wrap(~metric, 
              scales = "free_y", 
              nrow = 4, 
              strip.position = "right")
 
-
 # save
-ggsave(plot_spec_abs, 
+ggsave(plot_gen_abs, 
        filename = here("figures",
                        "fig_S5.pdf"), 
        width = 183, height = 100*2.5,
