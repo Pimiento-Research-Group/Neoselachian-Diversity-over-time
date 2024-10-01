@@ -180,7 +180,7 @@ plot_gen_abs <- dat_gen_full %>%
                   fill = "grey20") +
   geom_step(linewidth = 0.3, 
             colour = "grey20") +
-  labs(y = "Species Diversity",
+  labs(y = "Genus Diversity",
        x = "Time (Ma)",
        colour = NULL) +
   scale_x_reverse(breaks = seq(140, 0, by = -20), 
