@@ -40,7 +40,8 @@ div %>%
             fall_2 = -(100 - ((Pliocene * 100) /  Chattian)), 
             fall_3 = -(100 - ((Pleistocene * 100) / Pliocene)), 
             fall = -(100 - ((Pleistocene * 100) / Lutetian))) %>% 
-  write.xlsx(file = "Table1.xlsx")
+  write.xlsx(file = here("data", 
+                         "Table1.xlsx"))
 
 
 # per order ---------------------------------------------------------------
@@ -59,7 +60,8 @@ div %>%
             fall_2 = -(100 - ((Pliocene * 100) /  Chattian)), 
             fall_3 = -(100 - ((Pleistocene * 100) / Pliocene)), 
             fall = -(100 - ((Pleistocene * 100) / Lutetian))) %>% 
-  write.xlsx(file = "Table2.xlsx")
+  write.xlsx(file = here("data", 
+                         "Table2.xlsx"))
 
 
 
@@ -80,7 +82,8 @@ div_gen %>%
             fall_2 = -(100 - ((Pliocene * 100) /  Chattian)), 
             fall_3 = -(100 - ((Pleistocene * 100) / Pliocene)), 
             fall = -(100 - ((Pleistocene * 100) / Lutetian))) %>% 
-  write.xlsx(file = "TableS1.xlsx")
+  write.xlsx(file = here("data", 
+                         "TableS1.xlsx"))
 
 
 # per order genus level ---------------------------------------------------------------
@@ -99,7 +102,8 @@ div_gen %>%
             fall_2 = -(100 - ((Pliocene * 100) /  Chattian)), 
             fall_3 = -(100 - ((Pleistocene * 100) / Pliocene)), 
             fall = -(100 - ((Pleistocene * 100) / Lutetian))) %>% 
-  write.xlsx(file = "TableS2.xlsx")
+  write.xlsx(file = here("data", 
+                         "TableS2.xlsx"))
 
 
 
@@ -117,7 +121,8 @@ div_metric %>%
             fall_2 = -(100 - ((Pliocene * 100) /  Chattian)), 
             fall_3 = -(100 - ((Pleistocene * 100) / Pliocene)), 
             fall = -(100 - ((Pleistocene * 100) / Lutetian))) %>% 
-  write.xlsx(file = "TableS3.xlsx")
+  write.xlsx(file = here("data", 
+                         "TableS3.xlsx"))
 
 
 # metric comparison genus -----------------------------------------------
@@ -134,5 +139,6 @@ div_metric_gen %>%
             fall_2 = -(100 - ((Pliocene * 100) /  Chattian)), 
             fall_3 = -(100 - ((Pleistocene * 100) / Pliocene)), 
             fall = -(100 - ((Pleistocene * 100) / Lutetian))) %>% 
-  write.xlsx(file = "TableS4.xlsx")
+  write.xlsx(file = here("data", 
+                         "TableS4.xlsx"))
 
