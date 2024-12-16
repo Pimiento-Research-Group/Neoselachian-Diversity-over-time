@@ -43,11 +43,7 @@ This repository provides the scripts and data used to explore diversity patterns
 - **`spline_model.R`**  
   Calculates percentage changes in diversity over time across different diversity metrics.
 
----
+- **`Tables.R`**  
+  Creates the tables for the manuscript.
 
-## How to Use
 
-1. Clone the repository to your local machine:
-   ```bash
-   git clone https://github.com/username/Neoselachian-Diversity-over-time.git
-   cd Neoselachian-Diversity-over-time
