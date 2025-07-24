@@ -9,10 +9,7 @@ get_data <- function(file_order,
                      taxon_name) {
   read_csv(here("data",
                 file_order,
-                paste0(taxon_name, "_64.csv"))) %>% 
-    bind_rows(read_csv(here("data",
-                            file_order,
-                            paste0(taxon_name, "_128.csv")))) %>% 
+                paste0(taxon_name, ".csv"))) %>% 
     rowid_to_column("run") %>% 
     pivot_longer(cols = -run, 
                  names_to = "start_age", 
@@ -33,34 +30,34 @@ dat_neo_species <- get_data("deepdive_species", "all")
 dat_bat_species <- get_data("deepdive_species", "batoidea")
 
 # selachii
-dat_sel_species <- get_data("deepdive_species", "selachii")
+dat_sel_species <- get_data("deepdive_species", "selachimorpha")
 
 # per order
 dat_ord_species <- list.files(path = here("data", "deepdive_order_species"),
                               recursive = TRUE,
                               pattern = "\\.csv$",
                               full.names = TRUE) %>% 
-  map(~read_csv(.x, show_col_types = FALSE))  %>% 
   map(function(.x) {
-    if(!"145.0" %in% colnames(.x)){
-      .x <- add_column(.x, "145.0" = 0)
+    dat <- read_csv(.x, show_col_types = FALSE)
+    if(!"145.0" %in% colnames(dat)){
+      dat <- add_column(dat, "145.0" = 0)
     }
-    if("139.0" %in% colnames(.x)){
-      .x <- select(.x, -"139.0")
+    if("139.0" %in% colnames(dat)){
+      dat <- select(dat, -"139.0")
     }
-    if("132.0" %in% colnames(.x)){
-      .x <- select(.x, -"132.0")
+    if("132.0" %in% colnames(dat)){
+      dat <- select(dat, -"132.0")
     }
-    return(.x)
-  }) %>% 
+    return(dat)
+  }) %>%
   bind_rows() %>% 
   mutate(taxon = rep(list.files(path = here("data", "deepdive_order_species"),
                                 recursive = TRUE,
                                 pattern = "\\.csv$",
                                 full.names = FALSE) %>% 
-                       word(., sep = "_") %>% 
+                       str_remove("\\.csv$") %>% 
                        str_to_sentence(), 
-                     each = 100)) %>% 
+                     each = 400)) %>% 
   replace_na(list(`145` = 0)) %>% 
   pivot_longer(cols = -taxon, 
                names_to = "start_age", 
@@ -92,7 +89,7 @@ dat_neo_species %>%
               add_column(taxon = "Batoidea", 
                          .before = "start_age")) %>% 
   bind_rows(dat_sel_species %>% 
-              add_column(taxon = "Selachii", 
+              add_column(taxon = "Selachimorpha", 
                          .before = "start_age")) %>% 
   bind_rows(dat_ord_species) %>% 
   filter(start_age > 0) %>% 
@@ -109,34 +106,34 @@ dat_neo_genus <- get_data("deepdive_genus", "all")
 dat_bat_genus <- get_data("deepdive_genus", "batoidea")
 
 # selachii
-dat_sel_genus <- get_data("deepdive_genus", "selachii")
+dat_sel_genus <- get_data("deepdive_genus", "selachimorpha")
 
 # per order
 dat_ord_genus <- list.files(path = here("data", "deepdive_order_genus"),
-                              recursive = TRUE,
-                              pattern = "\\.csv$",
-                              full.names = TRUE) %>% 
-  map(~read_csv(.x, show_col_types = FALSE))  %>% 
+                            recursive = TRUE,
+                            pattern = "\\.csv$",
+                            full.names = TRUE) %>% 
   map(function(.x) {
-    if(!"145.0" %in% colnames(.x)){
-      .x <- add_column(.x, "145.0" = 0)
+    dat <- read_csv(.x, show_col_types = FALSE) 
+    if(!"145.0" %in% colnames(dat)){
+      dat <- add_column(dat, "145.0" = 0)
     }
-    if("139.0" %in% colnames(.x)){
-      .x <- select(.x, -"139.0")
+    if("139.0" %in% colnames(dat)){
+      dat <- select(dat, -"139.0")
     }
-    if("132.0" %in% colnames(.x)){
-      .x <- select(.x, -"132.0")
+    if("132.0" %in% colnames(dat)){
+      dat <- select(dat, -"132.0")
     }
-    return(.x)
+    return(dat)
   }) %>% 
   bind_rows() %>% 
   mutate(taxon = rep(list.files(path = here("data", "deepdive_order_genus"),
                                 recursive = TRUE,
                                 pattern = "\\.csv$",
                                 full.names = FALSE) %>% 
-                       word(., sep = "_") %>% 
+                       str_remove("\\.csv$") %>% 
                        str_to_sentence(), 
-                     each = 100)) %>% 
+                     each = 400)) %>% 
   replace_na(list(`145` = 0)) %>% 
   pivot_longer(cols = -taxon, 
                names_to = "start_age", 
@@ -155,7 +152,7 @@ dat_neo_genus %>%
               add_column(taxon = "Batoidea", 
                          .before = "start_age")) %>% 
   bind_rows(dat_sel_genus %>% 
-              add_column(taxon = "Selachii", 
+              add_column(taxon = "Selachimorpha", 
                          .before = "start_age")) %>% 
   bind_rows(dat_ord_genus) %>% 
   filter(start_age > 0) %>% 

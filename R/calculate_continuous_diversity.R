@@ -1,19 +1,18 @@
 library(here)
 library(tidyverse)
 library(divDyn)
+library(readxl)
 
 # read data ---------------------------------------------------------------
 
 # species level
-dat_species <- read_rds(here("data",
-                             "fins_filtered_species.rds"))
+dat_species <- read_xlsx(here("data",
+                             "species.xlsx"))
 
 # genus level
-dat_genus <- read_rds(here("data", 
-                           "fins_filtered_genus.rds"))
+dat_genus <- read_xlsx(here("data",
+                            "genus.xlsx"))
 
-# stage level data
-data(stages, package = "divDyn")
 
 # define the bins
 bins <- sort(c(145, 139.800,  132.600, 129.400, 125, 113.000, 100.500, 93.900, 
