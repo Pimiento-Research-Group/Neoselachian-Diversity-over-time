@@ -8,31 +8,15 @@ library(pammtools)
 
 dat_all_species <- read_csv(here("data",
                                  "deepdive_species",
-                                 "all_64.csv")) %>% 
-  add_column(model = "64") %>% 
-  bind_rows(read_csv(here("data",
-                          "deepdive_species",
-                          "all_128.csv")) %>% 
-              add_column(model = "128"))
+                                 "all.csv")) 
 
 dat_bat_species <- read_csv(here("data",
                                  "deepdive_species",
-                                 "batoidea_64.csv")) %>% 
-  add_column(model = "64") %>% 
-  bind_rows(read_csv(here("data",
-                          "deepdive_species",
-                          "batoidea_128.csv")) %>% 
-              add_column(model = "128"))
+                                 "batoidea.csv")) 
 
 dat_sel_species <- read_csv(here("data",
                                  "deepdive_species",
-                                 "selachii_64.csv")) %>% 
-  add_column(model = "64") %>% 
-  bind_rows(read_csv(here("data",
-                          "deepdive_species",
-                          "selachii_128.csv")) %>% 
-              add_column(model = "128"))
-
+                                 "selachimorpha.csv"))
 
 # stage data
 epoch_age <- read_rds(here("data", 
@@ -55,7 +39,7 @@ plot_div <- function(data_set,
   
   data_set %>%
     rowid_to_column("run") %>% 
-    pivot_longer(cols = -c(run, model), 
+    pivot_longer(cols = -c(run), 
                  names_to = "start_age", 
                  values_to = "DeepDive") %>% 
     group_by(start_age) %>% 
@@ -133,7 +117,7 @@ plot_all <- plot_div(dat_all_species,
 # selachii
 plot_sel <- plot_div(dat_sel_species, 
                      colour_man = "#681270", 
-                     taxon = "Selachii")
+                     taxon = "Selachimorpha")
 # batoidea
 plot_bat <- plot_div(dat_bat_species,
                      colour_man = "#2F899D", 
@@ -183,7 +167,7 @@ list_order <- list.files(path = here("data", "deepdive_order_species"),
                             pattern = "\\.csv$",
                             full.names = TRUE) %>% 
   map(function(.x) {
-    dat <- read_csv(.x, show_col_types = FALSE) 
+    dat <- read_csv(.x, show_col_types = FALSE)
     if(!"145.0" %in% colnames(dat)){
       dat <- add_column(dat, "145.0" = 0)
     }
@@ -194,17 +178,18 @@ list_order <- list.files(path = here("data", "deepdive_order_species"),
       dat <- select(dat, -"132.0")
     }
     return(dat)
-  }) %>% 
+  }) %>%
   bind_rows() %>% 
   mutate(model = rep(list.files(path = here("data", "deepdive_order_species"),
                             recursive = TRUE,
                             pattern = "\\.csv$",
                             full.names = FALSE) %>% 
-           word(., sep = "_") %>% 
-           str_to_sentence(), 
-           each = 100)) %>% 
+                       str_remove("\\.csv$") %>% 
+                       str_to_sentence(), 
+           each = 400)) %>% 
   replace_na(list(`145` = 0)) %>% 
-  group_split(model)
+  group_split(model) %>% 
+  map(~ select(.x, -model))
 
 
 # plot
@@ -213,7 +198,7 @@ plot_list_order <- list(order_data = list_order,
                                                  recursive = TRUE,
                                                  pattern = "\\.csv$",
                                                  full.names = FALSE) %>% 
-                          word(., sep = "_") %>% 
+                          str_remove("\\.csv$") %>% 
                           str_to_sentence() %>% 
                           unique(), 
                         order_colour = c(rep("#681270", 3), 
@@ -252,30 +237,15 @@ ggsave(fig_2,
 # read data 
 dat_all_genus <- read_csv(here("data",
                                  "deepdive_genus",
-                                 "all_64.csv")) %>% 
-  add_column(model = "64") %>% 
-  bind_rows(read_csv(here("data",
-                          "deepdive_genus",
-                          "all_128.csv")) %>% 
-              add_column(model = "128"))
+                                 "all.csv")) 
 
 dat_bat_genus <- read_csv(here("data",
                                  "deepdive_genus",
-                                 "batoidea_64.csv")) %>% 
-  add_column(model = "64") %>% 
-  bind_rows(read_csv(here("data",
-                          "deepdive_genus",
-                          "batoidea_128.csv")) %>% 
-              add_column(model = "128"))
+                                 "batoidea.csv"))
 
 dat_sel_genus <- read_csv(here("data",
                                  "deepdive_genus",
-                                 "selachii_64.csv")) %>% 
-  add_column(model = "64") %>% 
-  bind_rows(read_csv(here("data",
-                          "deepdive_genus",
-                          "selachii_128.csv")) %>% 
-              add_column(model = "128"))
+                                 "selachimorpha.csv"))
 # all
 plot_all <- plot_div(dat_all_genus,
                      colour_man = "#F95875", 
@@ -284,7 +254,7 @@ plot_all <- plot_div(dat_all_genus,
 # selachii
 plot_sel <- plot_div(dat_sel_genus, 
                      colour_man = "#681270", 
-                     taxon = "Selachii", 
+                     taxon = "Selachimorpha", 
                      y_label = "Genus Diversity")
 # batoidea
 plot_bat <- plot_div(dat_bat_genus,
@@ -332,11 +302,12 @@ list_order <- list.files(path = here("data", "deepdive_order_genus"),
                                 recursive = TRUE,
                                 pattern = "\\.csv$",
                                 full.names = FALSE) %>% 
-                       word(., sep = "_") %>% 
+                       str_remove("\\.csv$") %>% 
                        str_to_sentence(), 
-                     each = 100)) %>% 
+                     each = 400)) %>% 
   replace_na(list(`145` = 0)) %>% 
-  group_split(model)
+  group_split(model) %>% 
+  map(~ select(.x, -model))
 
 
 # plot
@@ -345,7 +316,7 @@ plot_list_order <- list(order_data = list_order,
                                                  recursive = TRUE,
                                                  pattern = "\\.csv$",
                                                  full.names = FALSE) %>% 
-                          word(., sep = "_") %>% 
+                          str_remove("\\.csv$") %>% 
                           str_to_sentence() %>% 
                           unique(), 
                         order_colour = c(rep("#681270", 3), 
