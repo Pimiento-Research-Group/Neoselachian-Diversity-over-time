@@ -15,12 +15,7 @@ dat_spec <- read_xlsx(here("data",
 # deepdive species
 dat_deep_spec <- read_csv(here("data",
                                  "deepdive_species",
-                                 "all_64.csv")) %>% 
-  add_column(model = "64") %>% 
-  bind_rows(read_csv(here("data",
-                          "deepdive_species",
-                          "all_128.csv")) %>% 
-              add_column(model = "128"))
+                                 "all.csv")) 
 
 # genus data
 dat_gen <- read_xlsx(here("data", 
@@ -29,12 +24,7 @@ dat_gen <- read_xlsx(here("data",
 # deepdive genus
 dat_deep_gen <- read_csv(here("data",
                                "deepdive_genus",
-                               "all_64.csv")) %>% 
-  add_column(model = "64") %>% 
-  bind_rows(read_csv(here("data",
-                          "deepdive_genus",
-                          "all_128.csv")) %>% 
-              add_column(model = "128"))
+                               "all.csv")) 
 
 # stage data
 epoch_age <- read_rds(here("data", 
@@ -52,7 +42,7 @@ stage_cor <- read_rds(here("data",
 
 # merge data
 dat_spec_full <- dat_deep_spec %>%
-  pivot_longer(cols = -model, 
+  pivot_longer(cols = everything(), 
                names_to = "start_age", 
                values_to = "diversity") %>% 
   mutate(start_age = as.double(start_age)) %>% 
@@ -75,6 +65,7 @@ dat_spec_full <- dat_deep_spec %>%
   mutate(metric = ordered(metric, 
                           levels = c("Raw", 
                                      "SQS", 
+                                     "Divvy",
                                      "PyRate",
                                      "DeepDive"))) 
 
@@ -121,7 +112,7 @@ plot_spec_abs <- dat_spec_full %>%
         panel.grid.minor = element_blank()) +
   facet_wrap(~metric, 
              scales = "free_y", 
-             nrow = 4, 
+             nrow = 5, 
              strip.position = "right")
 
 
@@ -139,7 +130,7 @@ ggsave(plot_spec_abs,
 # join data
 # merge data
 dat_gen_full <- dat_deep_gen %>%
-  pivot_longer(cols = -model, 
+  pivot_longer(cols = everything(), 
                names_to = "start_age", 
                values_to = "diversity") %>% 
   mutate(start_age = as.double(start_age)) %>% 
@@ -162,6 +153,7 @@ dat_gen_full <- dat_deep_gen %>%
   mutate(metric = ordered(metric, 
                           levels = c("Raw", 
                                      "SQS", 
+                                     "Divvy",
                                      "PyRate",
                                      "DeepDive"))) 
 
@@ -208,7 +200,7 @@ plot_gen_abs <- dat_gen_full %>%
         panel.grid.minor = element_blank()) +
   facet_wrap(~metric, 
              scales = "free_y", 
-             nrow = 4, 
+             nrow = 5, 
              strip.position = "right")
 
 # save

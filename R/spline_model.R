@@ -7,7 +7,7 @@ library(writexl)
 
 # pyrate species
 dat_pyrate_species <- read_delim(here("data", 
-                                      "all_species_input_PyRate_mcmcdiv.log")) %>% 
+                                      "species_PyRate_mcmcdiv.log")) %>% 
   select(it, contains("t_")) %>% 
   pivot_longer(-it, 
                names_to = "start_age", 
@@ -21,8 +21,9 @@ dat_pyrate_species <- read_delim(here("data",
 
 # pyrate genus
 dat_pyrate_genus <- read_delim(here("data", 
-                                      "all_genus_PyRate_mcmcdiv.log")) %>% 
+                                      "genus_PyRate_mcmcdiv.log")) %>% 
   select(it, contains("t_")) %>% 
+  mutate(across(-it, as.double)) %>% 
   pivot_longer(-it, 
                names_to = "start_age", 
                values_to = "diversity") %>% 
@@ -48,10 +49,20 @@ dat_raw <- read_rds(here("data",
                          "diversity_continuous_raw.rds")) %>% 
   select(start_age, diversity = speciesRT) 
 
-# sqs genus
+# raw genus
 dat_raw_genus <- read_rds(here("data",
                                "diversity_continuous_raw.rds")) %>% 
   select(start_age, diversity = speciesRT) 
+
+# divvy species
+dat_divvy_species <- read_rds(here("data",
+                                   "diversity_continuous_divvy_species.rds")) %>% 
+  select(-stg)
+
+# divvy genus
+dat_divvy_genus <- read_rds(here("data",
+                                   "diversity_continuous_divvy_genus.rds")) %>% 
+  select(-stg)
 
 # stage data
 epoch_age <- read_rds(here("data", 
@@ -158,16 +169,20 @@ div_per_stage(dat_pyrate_species) %>%
               add_column(metric = "raw")) %>% 
   full_join(sum_per_stage(dat_sqs) %>%
               add_column(metric = "sqs")) %>% 
+  full_join(dat_divvy_species %>%
+              add_column(metric = "divvy")) %>% 
   # save 
   write_xlsx(here("data", "taxa_per_stage_per_metric_species.xlsx"))
   
-# species
+# genus
 div_per_stage(dat_pyrate_genus) %>% 
   add_column(metric = "pyrate") %>% 
   full_join(sum_per_stage(dat_raw_genus) %>%
               add_column(metric = "raw")) %>% 
   full_join(sum_per_stage(dat_sqs_genus) %>%
               add_column(metric = "sqs")) %>% 
+  full_join(dat_divvy_genus %>%
+              add_column(metric = "divvy")) %>% 
   # save 
   write_xlsx(here("data", "taxa_per_stage_per_metric_genus.xlsx"))
 
