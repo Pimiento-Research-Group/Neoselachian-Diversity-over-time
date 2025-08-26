@@ -42,7 +42,7 @@ dat_sqs <- read_rds(here("data",
 # sqs genus
 dat_sqs_genus <- read_rds(here("data",
                          "diversity_continuous_sqs.rds")) %>% 
-  select(start_age, diversity = speciesRT) 
+  select(start_age, diversity = genusRT) 
 
 # raw species
 dat_raw <- read_rds(here("data",
@@ -52,7 +52,7 @@ dat_raw <- read_rds(here("data",
 # raw genus
 dat_raw_genus <- read_rds(here("data",
                                "diversity_continuous_raw.rds")) %>% 
-  select(start_age, diversity = speciesRT) 
+  select(start_age, diversity = genusRT) 
 
 # divvy species
 dat_divvy_species <- read_rds(here("data",
