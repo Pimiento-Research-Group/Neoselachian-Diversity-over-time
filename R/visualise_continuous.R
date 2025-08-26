@@ -30,6 +30,9 @@ dat_deep_gen <- read_csv(here("data",
 epoch_age <- read_rds(here("data", 
                            "epoch_age.rds"))
 
+periods_cor <- read_rds(here("data",
+                           "periods_cor.rds"))
+
 epoch_cor <- read_rds(here("data",
                            "epoch_cor.rds"))
 
@@ -92,7 +95,7 @@ plot_spec_abs <- dat_spec_full %>%
   scale_y_continuous(limits = c(0, NA)) +
   coord_geo(dat = list(stage_cor, 
                        epoch_cor, 
-                       "periods"),
+                       periods_cor),
             pos = list("b", "b", "b"),
             alpha = 0.2,
             height = list(unit(1.25, "line"), 
@@ -180,7 +183,7 @@ plot_gen_abs <- dat_gen_full %>%
   scale_y_continuous(limits = c(0, NA)) +
   coord_geo(dat = list(stage_cor, 
                        epoch_cor, 
-                       "periods"),
+                       periods_cor),
             pos = list("b", "b", "b"),
             alpha = 0.2,
             height = list(unit(1.25, "line"), 

@@ -1,6 +1,13 @@
 library(tidyverse)
 library(here)
 
+# set up epochs for plotting
+data("periods", package = "deeptime")
+
+periods_cor <- periods %>%
+  as_tibble() %>% 
+  mutate(max_age = ifelse(name == "Cretaceous", 150, max_age)) %>% 
+  filter(max_age <= 150)
 
 # set up epochs for plotting
 data(stages, package = "divDyn")
@@ -35,7 +42,8 @@ epoch_cor <- epochs %>%
          name = str_replace_all(name, "Late Cretaceous", "Upper Cretaceous"), 
          name = str_replace_all(name, "Early Cretaceous", "Lower Cretaceous"), 
          name = str_replace_all(name, "Pliocene", "Pli"), 
-         name = str_replace_all(name, "Pleistocene", "Ple"))
+         name = str_replace_all(name, "Pleistocene", "Ple")) %>% 
+  mutate(max_age = ifelse(name == "Lower Cretaceous", 145.0, max_age))
 
 
 # set up stages for plotting
@@ -46,21 +54,26 @@ stage_cor <- stages %>%
   filter(!name  %in% c("Meghalayan", "Northgrippian", "Greenlandian", 
                        "Late Pleistocene", "Chibanian", "Calabrian",
                        "Piacenzian", "Zanclean", "Gelasian", "Aptian",
-                       "Barremian")) %>% 
+                       "Barremian", "Berriasian", "Hauterivian", "Valanginian")) %>% 
   add_row(epoch_cor %>% 
-            filter(name %in% c("Pleistocene", "Pliocene"))) %>% 
-  add_row(tibble(name = c("Aptian", "Barremian"),
-                 max_age = c(125, 129.400), 
-                 min_age = c(113, 125), 
-                 abbr = c("Ap", "Brrm"), 
-                 color = c("#BFE48A", "#B3DF7F"))) %>% 
-  arrange(max_age)
-
+            filter(name %in% c("Ple", "Pli"))) %>% 
+  add_row(tibble(name = c("Aptian", "Barremian", "Hauterivian", "Valanginian", "Berriasian"),
+                 max_age = c(121.4, 129.400, 132.6, 139.8, 145.0), 
+                 min_age = c(113.2, 121.4, 129.4, 132.6, 139.8), 
+                 abbr = c("Ap", "Brrm", "Htr", "Vl", "Brrs"), 
+                 lab_color = "black", 
+                 color = c("#BFE48A", "#B3DF7F", "#A6D975", "#99D36A", "#8CCD60")))%>%
+ 
+  arrange(max_age) %>% 
+  filter(max_age <= 145) 
 
 # save data ---------------------------------------------------------------
 
 write_rds(epoch_age, here("data", 
                           "epoch_age.rds"))
+
+write_rds(periods_cor, here("data", 
+                          "periods_cor.rds"))
 
 write_rds(epoch_cor, here("data", 
                           "epoch_cor.rds"))
