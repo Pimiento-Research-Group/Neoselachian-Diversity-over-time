@@ -66,8 +66,8 @@ list_div_spec <- dat_spec_bin %>%
                          as.data.frame() %>%
                          cookies(xy = 1:2,
                                  iter = 500,
-                                 nSite = 8,
-                                 r = 1000,
+                                 nSite = 12,
+                                 r = 7000,
                                  output = "full"), 
                        .progress = TRUE))
    
@@ -100,8 +100,8 @@ list_div_gen <- dat_gen_bin %>%
                          as.data.frame() %>%
                          cookies(xy = 1:2,
                                  iter = 500,
-                                 nSite = 8,
-                                 r = 1000,
+                                 nSite = 10,
+                                 r = 5000,
                                  output = "full"), 
                        .progress = TRUE))
 
@@ -121,4 +121,144 @@ list_div_gen %>%
                  "diversity_continuous_divvy_genus.rds"), 
             compress = "gz")
 
+
+# perform nearest-neighbour clustering --------------------------------------------------------
+
+
+# perform circular subsampling
+list_div_spec_nn <- dat_spec_bin %>% 
+  filter(stg <= 27) %>% 
+  group_by(stg) %>% 
+  nest() %>% 
+  ungroup() %>% 
+  mutate(dat_sub = map(data,
+                       ~ .x %>%
+                         select(paleolon, paleolat, everything()) %>%
+                         as.data.frame() %>%
+                         clustr(xy = 1:2,
+                                 iter = 500,
+                                 nSite = NULL,
+                                 distMax = 10000,
+                                 output = "full"), 
+                       .progress = TRUE))
+
+# summarise and save
+list_div_spec_nn %>% 
+  mutate(n_occs = map(dat_sub, ~ .x %>%
+                        map("accepted_name") %>%
+                        map_dbl(n_distinct)), 
+         mean_div = map_dbl(n_occs, mean), 
+         min_div = map_dbl(n_occs, min), 
+         max_div = map_dbl(n_occs, max)) %>% 
+  arrange(stg) %>% 
+  add_column(start_age = rev(bins[3:29])) %>% 
+  select(stg, mean_div, min_div, max_div, start_age) %>% 
+  write_rds(here("data",
+                 "diversity_continuous_divvy_nn_species.rds"), 
+            compress = "gz")
+
+
+# same for genus level
+# perform circular subsampling
+list_div_gen_nn <- dat_gen_bin %>% 
+  filter(stg <= 27) %>% 
+  group_by(stg) %>% 
+  nest() %>% 
+  ungroup() %>% 
+  mutate(dat_sub = map(data,
+                       ~ .x %>%
+                         select(paleolon, paleolat, everything()) %>%
+                         as.data.frame() %>%
+                         clustr(xy = 1:2,
+                                iter = 500,
+                                nSite = NULL,
+                                distMax = 10000,
+                                output = "full"), 
+                       .progress = TRUE))
+
+
+# summarise and save
+list_div_gen_nn %>% 
+  mutate(n_occs = map(dat_sub, ~ .x %>%
+                        map("accepted_name") %>%
+                        map_dbl(n_distinct)), 
+         mean_div = map_dbl(n_occs, mean), 
+         min_div = map_dbl(n_occs, min), 
+         max_div = map_dbl(n_occs, max)) %>% 
+  arrange(stg) %>% 
+  add_column(start_age = rev(bins[3:29])) %>% 
+  select(stg, mean_div, min_div, max_div, start_age) %>% 
+  write_rds(here("data",
+                 "diversity_continuous_divvy_nn_genus.rds"), 
+            compress = "gz")
+
+
+# perform rarefaction within bands of equal latitude ------------------------------------------
+
+# perform circular subsampling
+list_div_spec_lb <- dat_spec_bin %>% 
+  filter(stg <= 27) %>% 
+  group_by(stg) %>% 
+  nest() %>% 
+  ungroup() %>% 
+  mutate(dat_sub = map(data,
+                       ~ .x %>%
+                         select(paleolon, paleolat, everything()) %>%
+                         as.data.frame() %>%
+                         bandit(xy = 1:2,
+                                iter = 500,
+                                nSite = 10,
+                                bin = 20,
+                                output = "full"), 
+                       .progress = TRUE))
+
+# summarise and save
+list_div_spec_lb %>% 
+  mutate(n_occs = map(dat_sub, ~ .x %>%
+                        map("accepted_name") %>%
+                        map_dbl(n_distinct)), 
+         mean_div = map_dbl(n_occs, mean), 
+         min_div = map_dbl(n_occs, min), 
+         max_div = map_dbl(n_occs, max)) %>% 
+  arrange(stg) %>% 
+  add_column(start_age = rev(bins[3:29])) %>% 
+  select(stg, mean_div, min_div, max_div, start_age) %>% 
+  write_rds(here("data",
+                 "diversity_continuous_divvy_lb_species.rds"), 
+            compress = "gz")
+
+
+# same for genus level
+# perform circular subsampling
+list_div_gen_lb <- dat_gen_bin %>% 
+  filter(stg <= 27) %>% 
+  group_by(stg) %>% 
+  nest() %>% 
+  ungroup() %>% 
+  mutate(dat_sub = map(data,
+                       ~ .x %>%
+                         select(paleolon, paleolat, everything()) %>%
+                         as.data.frame() %>%
+                         bandit(xy = 1:2,
+                                iter = 500,
+                                nSite = 10,
+                                bin = 20,
+                                output = "full"),
+                       .progress = TRUE))
+
+
+# summarise and save
+list_div_gen_lb %>% 
+  mutate(n_occs = map(dat_sub, ~ .x %>%
+                        map("accepted_name") %>%
+                        map_dbl(n_distinct)), 
+         mean_div = map_dbl(n_occs, mean), 
+         min_div = map_dbl(n_occs, min), 
+         max_div = map_dbl(n_occs, max)) %>% 
+  arrange(stg) %>% 
+  add_column(start_age = rev(bins[3:29])) %>% 
+  select(stg, mean_div, min_div, max_div, start_age) %>% 
+  write_rds(here("data",
+                 "diversity_continuous_divvy_lb_genus.rds"), 
+            compress = "gz")
 
