@@ -58,7 +58,6 @@ dat_spec_full <- dat_deep_spec %>%
               select(stage = name, start_age = max_age)) %>% 
   add_column(metric = "DeepDive") %>% 
   bind_rows(dat_spec %>% 
-              filter(!str_detect(metric, "divvy")) %>% 
               mutate(metric = str_to_sentence(metric), 
                      metric = str_replace_all(metric, 
                                               "Pyrate", 
@@ -69,6 +68,7 @@ dat_spec_full <- dat_deep_spec %>%
   mutate(metric = ordered(metric, 
                           levels = c("Raw", 
                                      "SQS", 
+                                     "Divvy",
                                      "PyRate",
                                      "DeepDive"))) 
 
@@ -146,17 +146,17 @@ dat_gen_full <- dat_deep_gen %>%
               select(stage = name, start_age = max_age)) %>% 
   add_column(metric = "DeepDive") %>% 
   bind_rows(dat_gen %>% 
-              filter(!str_detect(metric, "divvy")) %>% 
               mutate(metric = str_to_sentence(metric), 
                      metric = str_replace_all(metric, 
                                               "Pyrate", 
                                               "PyRate"), 
                      metric = str_replace_all(metric, 
                                               "Sqs", 
-                                              "SQS"))) %>% 
+                                              "SQS"))) %>%
   mutate(metric = ordered(metric, 
                           levels = c("Raw", 
                                      "SQS", 
+                                     "Divvy",
                                      "PyRate",
                                      "DeepDive"))) 
 

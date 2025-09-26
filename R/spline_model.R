@@ -183,7 +183,7 @@ div_per_stage(dat_pyrate_genus) %>%
               add_column(metric = "raw")) %>% 
   full_join(sum_per_stage(dat_sqs_genus) %>%
               add_column(metric = "sqs")) %>% 
-  full_join(dat_divvy_cs_genus %>%
+  full_join(dat_divvy_genus %>%
               add_column(metric = "divvy")) %>% 
   # save 
   write_xlsx(here("data", "taxa_per_stage_per_metric_genus.xlsx"))
