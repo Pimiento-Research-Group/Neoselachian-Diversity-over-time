@@ -71,21 +71,7 @@ list_div_spec <- dat_spec_bin %>%
                                  output = "full"), 
                        .progress = TRUE))
    
-# summarise and save
-list_div_spec %>% 
-  mutate(n_occs = map(dat_sub, ~ .x %>%
-                           map("accepted_name") %>%
-                           map_dbl(n_distinct)), 
-         mean_div = map_dbl(n_occs, mean), 
-         min_div = map_dbl(n_occs, min), 
-         max_div = map_dbl(n_occs, max)) %>% 
-  arrange(stg) %>% 
-  add_column(start_age = rev(bins[3:29])) %>% 
-  select(stg, mean_div, min_div, max_div, start_age) %>% 
-  write_rds(here("data",
-                 "diversity_continuous_divvy_species.rds"), 
-            compress = "gz")
-  
+
 
 # same for genus level
 # perform circular subsampling
@@ -106,20 +92,6 @@ list_div_gen <- dat_gen_bin %>%
                        .progress = TRUE))
 
 
-# summarise and save
-list_div_gen %>% 
-  mutate(n_occs = map(dat_sub, ~ .x %>%
-                        map("accepted_name") %>%
-                        map_dbl(n_distinct)), 
-         mean_div = map_dbl(n_occs, mean), 
-         min_div = map_dbl(n_occs, min), 
-         max_div = map_dbl(n_occs, max)) %>% 
-  arrange(stg) %>% 
-  add_column(start_age = rev(bins[3:29])) %>% 
-  select(stg, mean_div, min_div, max_div, start_age) %>% 
-  write_rds(here("data",
-                 "diversity_continuous_divvy_genus.rds"), 
-            compress = "gz")
 
 
 # perform nearest-neighbour clustering --------------------------------------------------------
@@ -142,20 +114,6 @@ list_div_spec_nn <- dat_spec_bin %>%
                                  output = "full"), 
                        .progress = TRUE))
 
-# summarise and save
-list_div_spec_nn %>% 
-  mutate(n_occs = map(dat_sub, ~ .x %>%
-                        map("accepted_name") %>%
-                        map_dbl(n_distinct)), 
-         mean_div = map_dbl(n_occs, mean), 
-         min_div = map_dbl(n_occs, min), 
-         max_div = map_dbl(n_occs, max)) %>% 
-  arrange(stg) %>% 
-  add_column(start_age = rev(bins[3:29])) %>% 
-  select(stg, mean_div, min_div, max_div, start_age) %>% 
-  write_rds(here("data",
-                 "diversity_continuous_divvy_nn_species.rds"), 
-            compress = "gz")
 
 
 # same for genus level
@@ -177,21 +135,6 @@ list_div_gen_nn <- dat_gen_bin %>%
                        .progress = TRUE))
 
 
-# summarise and save
-list_div_gen_nn %>% 
-  mutate(n_occs = map(dat_sub, ~ .x %>%
-                        map("accepted_name") %>%
-                        map_dbl(n_distinct)), 
-         mean_div = map_dbl(n_occs, mean), 
-         min_div = map_dbl(n_occs, min), 
-         max_div = map_dbl(n_occs, max)) %>% 
-  arrange(stg) %>% 
-  add_column(start_age = rev(bins[3:29])) %>% 
-  select(stg, mean_div, min_div, max_div, start_age) %>% 
-  write_rds(here("data",
-                 "diversity_continuous_divvy_nn_genus.rds"), 
-            compress = "gz")
-
 
 # perform rarefaction within bands of equal latitude ------------------------------------------
 
@@ -212,20 +155,6 @@ list_div_spec_lb <- dat_spec_bin %>%
                                 output = "full"), 
                        .progress = TRUE))
 
-# summarise and save
-list_div_spec_lb %>% 
-  mutate(n_occs = map(dat_sub, ~ .x %>%
-                        map("accepted_name") %>%
-                        map_dbl(n_distinct)), 
-         mean_div = map_dbl(n_occs, mean), 
-         min_div = map_dbl(n_occs, min), 
-         max_div = map_dbl(n_occs, max)) %>% 
-  arrange(stg) %>% 
-  add_column(start_age = rev(bins[3:29])) %>% 
-  select(stg, mean_div, min_div, max_div, start_age) %>% 
-  write_rds(here("data",
-                 "diversity_continuous_divvy_lb_species.rds"), 
-            compress = "gz")
 
 
 # same for genus level
@@ -247,18 +176,281 @@ list_div_gen_lb <- dat_gen_bin %>%
                        .progress = TRUE))
 
 
-# summarise and save
-list_div_gen_lb %>% 
-  mutate(n_occs = map(dat_sub, ~ .x %>%
-                        map("accepted_name") %>%
-                        map_dbl(n_distinct)), 
-         mean_div = map_dbl(n_occs, mean), 
-         min_div = map_dbl(n_occs, min), 
-         max_div = map_dbl(n_occs, max)) %>% 
+
+# plot individual estimates -------------------------------------------------------------------
+
+library(pammtools)
+library(deeptime)
+
+# stage data
+epoch_age <- read_rds(here("data", 
+                           "epoch_age.rds"))
+
+periods_cor <- read_rds(here("data",
+                             "periods_cor.rds"))
+
+epoch_cor <- read_rds(here("data",
+                           "epoch_cor.rds"))
+
+stage_cor <- read_rds(here("data", 
+                           "stage_cor.rds"))
+
+# first load deepdive data for comparison 
+# deepdive species
+dat_deep_spec <- read_csv(here("data",
+                               "deepdive_species",
+                               "all.csv")) 
+
+
+# deepdive genus
+dat_deep_gen <- read_csv(here("data",
+                              "deepdive_genus",
+                              "all.csv")) 
+
+# for species
+dat_div_spec <- map2_df(.x = list(list_div_spec, list_div_spec_lb, list_div_spec_nn), 
+        .y = c("CS", "LB", "NN"), 
+        .f = ~ .x %>% 
+          mutate(n_occs = map(dat_sub, ~ .x %>%
+                                map("accepted_name") %>%
+                                map_dbl(n_distinct)), 
+                 mean_div = map_dbl(n_occs, mean), 
+                 min_div = map_dbl(n_occs, min), 
+                 max_div = map_dbl(n_occs, max)) %>% 
+          arrange(stg) %>% 
+          add_column(start_age = rev(bins[3:29])) %>% 
+          select(stg, mean_div, min_div, max_div, start_age) %>% 
+          add_column(metric = .y))
+
+
+
+# join with deepdive
+dat_div_spec_full <- dat_deep_spec %>%
+  pivot_longer(cols = everything(), 
+               names_to = "start_age", 
+               values_to = "diversity") %>% 
+  mutate(start_age = as.double(start_age)) %>% 
+  group_by(start_age) %>% 
+  summarise(mean_div = mean(diversity), 
+            min_div = min(diversity), 
+            max_div = max(diversity)) %>% 
+  filter(start_age > 0) %>% 
+  add_column(metric = "DeepDive") %>% 
+  bind_rows(dat_div_spec %>% 
+              select(start_age, mean_div, min_div, max_div, metric) %>% 
+              mutate(metric = case_when(
+                metric == "CS" ~ "Circular subsampling", 
+                metric == "LB" ~ "Equal latitudinal bands", 
+                metric == "NN" ~ "Nearest Neighbour"
+              ))) %>% 
+  mutate(metric = ordered(metric, levels = rev(c("DeepDive", 
+                                             "Circular subsampling", 
+                                             "Equal latitudinal bands", 
+                                             "Nearest Neighbour"))))
+
+
+
+
+# visualise
+plot_spec_div <- dat_div_spec_full %>%
+  ggplot(aes(start_age, mean_div,
+             colour = metric)) +
+  geom_vline(xintercept = epoch_age,
+             colour = "grey95",
+             linewidth = 0.4) +
+  geom_stepribbon(aes(ymin = min_div, 
+                      ymax = max_div), 
+                  alpha = 0.3, 
+                  colour = "grey80", 
+                  linewidth = 0.001, 
+                  fill = "grey20") +
+  geom_step(linewidth = 0.3, 
+            colour = "grey20") +
+  labs(y = "Species Diversity",
+       x = "Time (Ma)",
+       colour = NULL) +
+  scale_x_reverse(breaks = seq(140, 0, by = -20), 
+                  limits = c(145, 0)) +
+  scale_y_continuous(limits = c(0, NA)) +
+  coord_geo(dat = list(stage_cor, 
+                       epoch_cor, 
+                       periods_cor),
+            pos = list("b", "b", "b"),
+            alpha = 0.2,
+            height = list(unit(1.25, "line"), 
+                          unit(0.75, "line"), 
+                          unit(0.75, "line")),
+            size = list(6/.pt, 6/.pt, 6/.pt),
+            lab_color = "grey20",
+            color = "grey20",
+            abbrv = list(TRUE, FALSE, FALSE),
+            rot = list(90, 0, 0),
+            expand = FALSE,
+            lwd = list(0.1, 0.1, 0.1)) +
+  theme_minimal() +
+  theme(legend.position = "none",
+        axis.ticks = element_line(colour = "grey50"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  facet_wrap(~metric, 
+             scales = "free_y", 
+             nrow = 5, 
+             strip.position = "right")
+
+
+# save
+ggsave(plot_spec_div, 
+       filename = here("figures",
+                       "fig_S6.pdf"), 
+       width = 183, height = 100*2,
+       units = "mm", 
+       bg = "white")
+
+
+# genus level 
+
+## for genus
+dat_div_gen <- map2_df(.x = list(list_div_gen, list_div_gen_lb, list_div_gen_nn), 
+                        .y = c("CS", "LB", "NN"), 
+                        .f = ~ .x %>% 
+                          mutate(n_occs = map(dat_sub, ~ .x %>%
+                                                map("accepted_name") %>%
+                                                map_dbl(n_distinct)), 
+                                 mean_div = map_dbl(n_occs, mean), 
+                                 min_div = map_dbl(n_occs, min), 
+                                 max_div = map_dbl(n_occs, max)) %>% 
+                          arrange(stg) %>% 
+                          add_column(start_age = rev(bins[3:29])) %>% 
+                          select(stg, mean_div, min_div, max_div, start_age) %>% 
+                          add_column(metric = .y))
+
+
+
+# join with deepdive
+dat_div_gen_full <- dat_deep_gen %>%
+  pivot_longer(cols = everything(), 
+               names_to = "start_age", 
+               values_to = "diversity") %>% 
+  mutate(start_age = as.double(start_age)) %>% 
+  group_by(start_age) %>% 
+  summarise(mean_div = mean(diversity), 
+            min_div = min(diversity), 
+            max_div = max(diversity)) %>% 
+  filter(start_age > 0) %>% 
+  add_column(metric = "DeepDive") %>% 
+  bind_rows(dat_div_gen %>% 
+              select(start_age, mean_div, min_div, max_div, metric) %>% 
+              mutate(metric = case_when(
+                metric == "CS" ~ "Circular subsampling", 
+                metric == "LB" ~ "Equal latitudinal bands", 
+                metric == "NN" ~ "Nearest Neighbour"
+              ))) %>% 
+  mutate(metric = ordered(metric, levels = rev(c("DeepDive", 
+                                                 "Circular subsampling", 
+                                                 "Equal latitudinal bands", 
+                                                 "Nearest Neighbour"))))
+
+
+
+
+# visualise
+plot_gen_div <- dat_div_gen_full %>%
+  ggplot(aes(start_age, mean_div,
+             colour = metric)) +
+  geom_vline(xintercept = epoch_age,
+             colour = "grey95",
+             linewidth = 0.4) +
+  geom_stepribbon(aes(ymin = min_div, 
+                      ymax = max_div), 
+                  alpha = 0.3, 
+                  colour = "grey80", 
+                  linewidth = 0.001, 
+                  fill = "grey20") +
+  geom_step(linewidth = 0.3, 
+            colour = "grey20") +
+  labs(y = "Genus Diversity",
+       x = "Time (Ma)",
+       colour = NULL) +
+  scale_x_reverse(breaks = seq(140, 0, by = -20), 
+                  limits = c(145, 0)) +
+  scale_y_continuous(limits = c(0, NA)) +
+  coord_geo(dat = list(stage_cor, 
+                       epoch_cor, 
+                       periods_cor),
+            pos = list("b", "b", "b"),
+            alpha = 0.2,
+            height = list(unit(1.25, "line"), 
+                          unit(0.75, "line"), 
+                          unit(0.75, "line")),
+            size = list(6/.pt, 6/.pt, 6/.pt),
+            lab_color = "grey20",
+            color = "grey20",
+            abbrv = list(TRUE, FALSE, FALSE),
+            rot = list(90, 0, 0),
+            expand = FALSE,
+            lwd = list(0.1, 0.1, 0.1)) +
+  theme_minimal() +
+  theme(legend.position = "none",
+        axis.ticks = element_line(colour = "grey50"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  facet_wrap(~metric, 
+             scales = "free_y", 
+             nrow = 5, 
+             strip.position = "right")
+
+
+
+# save
+ggsave(plot_gen_div, 
+       filename = here("figures",
+                       "fig_S7.pdf"), 
+       width = 183, height = 100*2,
+       units = "mm", 
+       bg = "white")
+
+
+
+# average metric ------------------------------------------------------------------------------
+
+# for species
+bind_rows(list_div_spec, list_div_spec_lb) %>% 
+  bind_rows(list_div_spec_nn) %>%
+  select(-data) %>% 
+  unnest(dat_sub) %>% 
+  mutate(n_occs = map_dbl(.x = dat_sub, 
+                          ~ .x %>%
+                            n_distinct("accepted_name"))) %>% 
+  group_by(stg) %>% 
+  summarise(mean_div = mean(n_occs),
+            min_div = min(n_occs),
+            max_div = max(n_occs)) %>% 
   arrange(stg) %>% 
   add_column(start_age = rev(bins[3:29])) %>% 
   select(stg, mean_div, min_div, max_div, start_age) %>% 
   write_rds(here("data",
-                 "diversity_continuous_divvy_lb_genus.rds"), 
+                 "diversity_continuous_divvy_species.rds"), 
             compress = "gz")
+
+
+# for genus
+bind_rows(list_div_gen, list_div_gen_lb) %>% 
+  bind_rows(list_div_gen_nn) %>%
+  select(-data) %>% 
+  unnest(dat_sub) %>% 
+  mutate(n_occs = map_dbl(.x = dat_sub, 
+                          ~ .x %>%
+                            n_distinct("accepted_name"))) %>% 
+  group_by(stg) %>% 
+  summarise(mean_div = mean(n_occs),
+            min_div = min(n_occs),
+            max_div = max(n_occs)) %>% 
+  arrange(stg) %>% 
+  add_column(start_age = rev(bins[3:29])) %>% 
+  select(stg, mean_div, min_div, max_div, start_age) %>% 
+  write_rds(here("data",
+                 "diversity_continuous_divvy_genus.rds"), 
+            compress = "gz")
+
+
 

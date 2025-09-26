@@ -55,38 +55,15 @@ dat_raw_genus <- read_rds(here("data",
   select(start_age, diversity = genusRT) 
 
 # divvy species 
-# circular subsampling
-dat_divvy_cs_species <- read_rds(here("data",
+dat_divvy_species <- read_rds(here("data",
                                    "diversity_continuous_divvy_species.rds")) %>% 
-  select(-stg)
-
-# nearest neighbour
-dat_divvy_nn_species <- read_rds(here("data",
-                                      "diversity_continuous_divvy_nn_species.rds")) %>% 
-  select(-stg)
-
-# equal latitudinal bands
-dat_divvy_lb_species <- read_rds(here("data",
-                                      "diversity_continuous_divvy_lb_species.rds")) %>% 
   select(-stg)
 
 
 # divvy genus 
-# circular subsampling
-dat_divvy_cs_genus <- read_rds(here("data",
+dat_divvy_genus <- read_rds(here("data",
                                       "diversity_continuous_divvy_genus.rds")) %>% 
   select(-stg)
-
-# nearest neighbour
-dat_divvy_nn_genus <- read_rds(here("data",
-                                      "diversity_continuous_divvy_nn_genus.rds")) %>% 
-  select(-stg)
-
-# equal latitudinal bands
-dat_divvy_lb_genus <- read_rds(here("data",
-                                      "diversity_continuous_divvy_lb_genus.rds")) %>% 
-  select(-stg)
-
 
 
 # stage data
@@ -194,12 +171,8 @@ div_per_stage(dat_pyrate_species) %>%
               add_column(metric = "raw")) %>% 
   full_join(sum_per_stage(dat_sqs) %>%
               add_column(metric = "sqs")) %>% 
-  full_join(dat_divvy_cs_species %>%
-              add_column(metric = "divvy Circular Subsampling")) %>% 
-  full_join(dat_divvy_nn_species %>%
-              add_column(metric = "divvy Nearest Neighbour")) %>% 
-  full_join(dat_divvy_lb_species %>%
-              add_column(metric = "divvy Equal Latitudinal Bands")) %>% 
+  full_join(dat_divvy_species %>%
+              add_column(metric = "divvy")) %>% 
   # save 
   write_xlsx(here("data", "taxa_per_stage_per_metric_species.xlsx"))
   
@@ -211,11 +184,7 @@ div_per_stage(dat_pyrate_genus) %>%
   full_join(sum_per_stage(dat_sqs_genus) %>%
               add_column(metric = "sqs")) %>% 
   full_join(dat_divvy_cs_genus %>%
-              add_column(metric = "divvy Circular Subsampling")) %>% 
-  full_join(dat_divvy_nn_genus %>%
-              add_column(metric = "divvy Nearest Neighbour")) %>% 
-  full_join(dat_divvy_lb_genus %>%
-              add_column(metric = "divvy Equal Latitudinal Bands")) %>%
+              add_column(metric = "divvy")) %>% 
   # save 
   write_xlsx(here("data", "taxa_per_stage_per_metric_genus.xlsx"))
 
